@@ -18,7 +18,7 @@ DATA_DIR = Path(r"pilot_data")
 
 # same goes for the output directory. I have just created a new empty folder called analysis_output in our repo. set that as OUTPUT_DIR below
 
-# insert code here
+OUTPUT_DIR = Path("analysis_output")
 
 # Participant filter: set to a non-empty list to restrict analyses to specific
 # participant IDs, e.g. PARTICIPANT_FILTER = [2, 3].
@@ -37,7 +37,7 @@ all_files = list(DATA_DIR.glob("CDmem_1_*.csv"))
 # 2. Create an empty list to store the dataframes for each participant
 # a list is the same structure as the participant filter above :)
 
-# insert code here
+df_list = []
 
 # 3. Loop through each file path that we found
 # a for loop does whatever is indented below it, for each item in the list
@@ -53,17 +53,16 @@ for file_path in all_files:
     # you do this via writing the name of the empty list and then .append(df), single line of code
     # .append() is a "method" that adds the item in parantheses to the end of the list
     
-    # insert code here
+    df_list.append(df)
 
 
 # up to this point, we have loaded all the data in the data folder.
 # 4.  now we need to filter participants if you set numbers in PARTICIPANT_FILTER list above
 
-if PARTICIPANT_FILTER:
+if PARTICIPANT_FILTER: 
     # Use list comprehension to keep only data for included participants
     # change "thelistyoucreated" to whatever name you gave your list above
-    thelistyoucreated = [df for df in thelistyoucreated if df["participant"].iloc[0] in PARTICIPANT_FILTER]
-
+    df_list = [df for df in df_list if df["participant"].iloc[0] in PARTICIPANT_FILTER]
 
 # 5. recall that we have everything in a list. but for stats, we need everything in a dataframe (i.e., rows, columns, etc. so we can use column names etc later)
 # we do this with pd.concat()
@@ -71,9 +70,9 @@ if PARTICIPANT_FILTER:
 # ignore_index = True means that we want to create a new index for the combined dataframe
 
 # change "thelistyoucreated" to whatever name you gave your list above
-if thelistyoucreated: # This checks if the list is not empty
-    data = pd.concat(thelistyoucreated, ignore_index=True)
-    print(f"Successfully loaded {len(thelistyoucreated)} data files! Total rows: {len(data)}")
+if df_list: # This checks if the list is not empty
+    data = pd.concat(df_list, ignore_index=True)
+    print(f"Successfully loaded {len(df_list)} data files! Total rows: {len(data)}")
     # len() gives the length of a list. len(thelistyoucreated) gives the number of lists in the listyoucreated. recall that thelistyoucreated was created to store all data from the folder.
     # similarly, len(data) gives the number of rows in the dataframe.
 else:
@@ -86,7 +85,7 @@ else:
 # in either the 'low' or 'high' control condition during the 'test' phase.
 # set a threshold for the timeout rate. basically a variable that equals 0.50
 
-# insert code here
+TIMEOUT_THRESHOLD = 0.50
 
 # 1. Filter the data to only include the "test" phase 
 # the .copy one creates a copy so that the original doesnt get modified
@@ -101,14 +100,14 @@ test_data["is_timeout"] = test_data["is_timeout"].astype(str).str.strip().str.lo
 # We can do this by taking the mean of the "is_timeout" column (since True is 1 and False is 0)
 
 # timeout_rate = ........
-# insert more code here
+timeout_rate = test_data.groupby(["participant", "control_condition"])["is_timeout"].mean().reset_index()
 
 # 4. Find the rows where the timeout rate is greater than or equal to our threshold
 
-# insert code here
+failed_rows = timeout_rate[timeout_rate["is_timeout"] >= TIMEOUT_THRESHOLD]
 
 # 5. Get a simple list of their unique participant IDs
-
+listofexcludedparticipants = failed_rows["participant"].unique().tolist()
 
 print("\nEXCLUSION CRITERION 1: Timeout Rate")
 # change "listofexcludedparticipants" to whatever you named that list at step 5
@@ -122,7 +121,7 @@ else:
 # The '~' symbol means "NOT" (keep data where participant is NOT in the list)
 # don't forget to use .copy() again
 
-# insert code here
+data = data[~data["participant"].isin(listofexcludedparticipants)].copy()
 
 #-----------------------------------
 # NOW TRY TO LOAD AND FILTER THE RECOGNITION DATA
@@ -130,14 +129,37 @@ else:
 # recall that the exclusion criteria for recognition data is trial based:
 # following Ren et al., 2026, any trial that has a RT of +- 3SD of the **participant mean** should be excluded
 
-# insert code here
+# 1. load the data (similar to how we loaded the main data, but with a different naming pattern)
+recog_files = list(DATA_DIR.glob("CDmem_*_recognition.csv"))
+recog_list = []
+
+for file_path in recog_files:
+    df = pd.read_csv(file_path)
+    recog_list.append(df)
+
+if recog_list:
+    recog_data = pd.concat(recog_list, ignore_index=True)
+    print(f"\nSuccessfully loaded {len(recog_list)} recognition files! Total rows: {len(recog_data)}")
+else:
+    print("\nWarning: No recognition data files found.")
+
+# calculate mean and SD of RT for each participant
+participant_mean_rt = recog_data.groupby("participant")["mem_rt"].transform("mean")
+participant_sd_rt = recog_data.groupby("participant")["mem_rt"].transform("std")
+
+# calculate upper and lower bounds for each trial based on participant mean and SD
+upper_bound = participant_mean_rt + (3 * participant_sd_rt)
+lower_bound = participant_mean_rt - (3 * participant_sd_rt)
+
+# create a boolean mask to identify valid trials (those within the bounds)
+valid_trials_mask = (recog_data["mem_rt"] >= lower_bound) & (recog_data["mem_rt"] <= upper_bound)
+
+# apply the mask to filter out invalid trials
+clean_recog_data = recog_data[valid_trials_mask].copy()
+
+# report how many trials were removed
+trials_removed = len(recog_data) - len(clean_recog_data)
+print(f"EXCLUSION CRITERION 2: Removed {trials_removed} recognition trials outside of 3SD.")
 
 
-
-
-
-
-
-
-
-# NEXT STEP WILL BE TO MATCH EXCLUSIONS FROM BOTH DATASETS AND RUN ANALYSES
+# NEXT STEP WILL BE TO MATCH EXCLUSIONS FROM BOTH DATASETS AND RUN ANALYSES 
