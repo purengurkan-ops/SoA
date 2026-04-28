@@ -9,6 +9,11 @@ import pandas as pd #the package that allows you to work with dataframes
 import matplotlib.pyplot as plt #the package that allows you to create plots
 import seaborn as sns #the package that allows you to create more advanced plots
 from pathlib import Path
+from scipy.stats import norm
+
+
+import pingouin as pg #the package that allows you to perform statistical analyses (e.g., t-tests, ANOVAs, etc.)
+
 
 #-------------------------
 # Import data
@@ -162,4 +167,90 @@ trials_removed = len(recog_data) - len(clean_recog_data)
 print(f"EXCLUSION CRITERION 2: Removed {trials_removed} recognition trials outside of 3SD.")
 
 
-# NEXT STEP WILL BE TO MATCH EXCLUSIONS FROM BOTH DATASETS AND RUN ANALYSES 
+# NEXT STEP: MATCH EXCLUSIONS FROM BOTH DATASETS AND RUN ANALYSES
+# for t-test calculate d' for each participant and condition, then run a paired t-test comparing d' between controlled and uncontrolled items
+
+OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+
+# Make sure recognition data only includes the same participants that survived the main timeout exclusion.
+valid_participants = data["participant"].unique()
+print(f"Participants after timeout exclusion: {len(valid_participants)}")
+
+if len(valid_participants) == 0:
+    raise ValueError("No valid participants remain after timeout exclusions. Cannot continue recognition analysis.")
+
+clean_recog_data = clean_recog_data[clean_recog_data["participant"].isin(valid_participants)].copy()
+
+if clean_recog_data.empty:
+    print("Warning: Recognition data contains no trials after matching exclusions. Check participant filtering and recognition files.")
+else:
+    print(f"Recognition trials after matching exclusions: {len(clean_recog_data)}")
+
+# Standardize recognition labels
+clean_recog_data["mem_response"] = clean_recog_data["mem_response"].astype(str).str.strip().str.lower()
+clean_recog_data["mem_ground_truth"] = clean_recog_data["mem_ground_truth"].astype(str).str.strip().str.lower()
+clean_recog_data["controlled"] = clean_recog_data["controlled"].astype(str).str.strip().str.lower()
+
+# Function to compute d-prime with loglinear correction
+
+def compute_d_prime(hits, misses, false_alarms, correct_rejections):
+    hit_rate = (hits + 0.5) / (hits + misses + 1)
+    fa_rate = (false_alarms + 0.5) / (false_alarms + correct_rejections + 1)
+    return norm.ppf(hit_rate) - norm.ppf(fa_rate)
+
+# Compute false alarm counts per participant using all new/unseen trials
+false_alarm_stats = (
+    clean_recog_data[clean_recog_data["mem_ground_truth"] == "unseen"]
+    .groupby("participant")["mem_response"]
+    .value_counts()
+    .unstack(fill_value=0)
+    .rename(columns={"yes": "false_alarms", "no": "correct_rejections"})
+    .reset_index()
+)
+
+for col in ["false_alarms", "correct_rejections"]:
+    if col not in false_alarm_stats.columns:
+        false_alarm_stats[col] = 0
+
+rows = []
+for participant, subject_data in clean_recog_data.groupby("participant"):
+    fa_row = false_alarm_stats[false_alarm_stats["participant"] == participant]
+    if fa_row.empty:
+        continue
+    false_alarms = int(fa_row["false_alarms"].iloc[0])
+    correct_rejections = int(fa_row["correct_rejections"].iloc[0])
+
+    for condition, condition_data in subject_data[subject_data["mem_ground_truth"] == "seen"].groupby("controlled"):
+        if condition not in {"yes", "no"}:
+            continue
+        hits = (condition_data["mem_response"] == "yes").sum()
+        misses = (condition_data["mem_response"] == "no").sum()
+        d_prime = compute_d_prime(hits, misses, false_alarms, correct_rejections)
+        rows.append({
+            "participant": participant,
+            "controlled": condition,
+            "hits": hits,
+            "misses": misses,
+            "false_alarms": false_alarms,
+            "correct_rejections": correct_rejections,
+            "d_prime": d_prime,
+        })
+
+if not rows:
+    raise ValueError("No d-prime rows were generated. Check recognition labels and controlled annotation.")
+
+results_df = pd.DataFrame(rows)
+results_df.to_csv(OUTPUT_DIR / "dprime_by_condition.csv", index=False)
+
+print("\nD-prime results by participant and condition:")
+print(results_df.groupby("controlled")["d_prime"].describe())
+
+wide_dprime = results_df.pivot(index="participant", columns="controlled", values="d_prime").dropna()
+print(f"\nParticipants with both conditions available: {len(wide_dprime)}")
+
+if len(wide_dprime) < 2:
+    print("Not enough paired participants to run a paired t-test.")
+else:
+    ttest_results = pg.ttest(wide_dprime["yes"], wide_dprime["no"], paired=True)
+    print("\nPaired t-test comparing d' for controlled=yes vs controlled=no")
+    print(ttest_results)
