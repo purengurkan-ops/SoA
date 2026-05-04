@@ -8,9 +8,10 @@ import numpy as np #the package that allows you to perform numerical operations
 import pandas as pd #the package that allows you to work with dataframes
 import matplotlib.pyplot as plt #the package that allows you to create plots
 import seaborn as sns #the package that allows you to create more advanced plots
-from pathlib import Path
-from scipy.stats import norm
-
+from pathlib import Path #the package that allows you to work with file paths in a more flexible way
+from scipy.stats import norm #the package that allows you to perform statistical analyses (e.g., t-tests, ANOVAs, etc.)
+import polars as pl
+from pymer4.models import glmer
 
 import pingouin as pg #the package that allows you to perform statistical analyses (e.g., t-tests, ANOVAs, etc.)
 
@@ -254,3 +255,111 @@ else:
     ttest_results = pg.ttest(wide_dprime["yes"], wide_dprime["no"], paired=True)
     print("\nPaired t-test comparing d' for controlled=yes vs controlled=no")
     print(ttest_results)
+
+
+import polars as pl
+from pymer4.models import glmer
+
+# =============================================================================
+# STEP 2: Prepare the TARGET trials (old items)
+# =============================================================================
+# "Targets" are images that were ACTUALLY shown to participants during encoding.
+# In the recognition file, these are rows where mem_ground_truth == 'seen'.
+#
+# We also need to know WHICH control condition each image came from
+# (HIGH or LOW), because that's our key predictor.
+# That information lives in the main task file, not in the recognition file.
+
+# --- 2a. Pull out only the "seen" images from recognition ---
+targets = recog_data[recog_data['mem_ground_truth'] == 'seen'].copy()
+
+# --- 2b. Build a lookup table: image filename → control condition ---
+# We extract Image A and Image B from the main task data (named 'data'), 
+# grab their condition, and rename the columns so they match the recognition data.
+lookup_A = data[['participant', 'img_A_name', 'control_condition']].copy()
+lookup_A = lookup_A.rename(columns={'img_A_name': 'mem_filename'})
+
+lookup_B = data[['participant', 'img_B_name', 'control_condition']].copy()
+lookup_B = lookup_B.rename(columns={'img_B_name': 'mem_filename'})
+
+# Combine them and drop any duplicates to make a clean dictionary/lookup table
+img_lookup = pd.concat([lookup_A, lookup_B], ignore_index=True).drop_duplicates()
+
+# --- 2c. Merge condition info into the targets dataframe ---
+targets = targets.merge(img_lookup, on=['participant', 'mem_filename'], how='left')
+
+# --- 2d. For Analysis 4 (PRIMARY analysis), we only care about
+#         whether the trial was HIGH vs LOW control.
+#         The 'control_condition' column is the trial_level for controlled items,
+#         and 'uncontrolled' for uncontrolled items.
+#         (For this primary analysis, we keep both item types but label them by
+#          trial condition, not by whether the item itself was controlled.)
+
+# Overwrite the 'control_condition' with the overall trial condition.
+# Note: Ensure that 'trial_level' is the exact name of the column from your main data 
+# that holds the overarching "high" or "low" status for the whole trial!
+targets['control_condition'] = targets['trial_level']
+
+# Convert the yes/no memory response to a binary integer (1 = said "old", 0 = said "new")
+# We use .str.lower() just to be safe, in case there are any capitalized "Old" or "New" entries.
+# Then we map those text values to integers.
+targets['mem_response_bin'] = targets['mem_response'].str.lower().map({'old': 1, 'new': 0})
+
+# =============================================================================
+# STEP 3: Prepare the FOIL trials (new items)
+# =============================================================================
+# "Foils" are images that were NEVER shown during encoding.
+# In the recognition file, these are rows where mem_ground_truth == 'unseen'.
+#
+# The key difference from targets: foils have NO real control condition,
+# because they were never part of the main task.
+#
+# For the interaction model, we need to assign foils to a control condition
+# anyway (so the model has something to estimate). We do this with a
+# BALANCED DUMMY ASSIGNMENT — split foils 50/50 into "high" and "low"
+# per participant. Because the assignment is balanced, it doesn't bias
+# the estimate of the interaction, but it IS a modelling choice you
+# should report in your methods section.
+
+foils = recog_data[recog_data['mem_ground_truth'] == 'unseen'].copy()
+
+# Sort within participant so the split is deterministic
+
+foils = foils.sort_values(by=['participant', 'mem_filename'])
+
+# Assign dummy control condition: first half of each participant's foils → "high",
+# second half → "low"
+# this is because the foils were not shown in the control detection task so they dont belong to any condition, however for the model to work we need to assign them artificial conditions
+
+row_numbers = foils.groupby('participant').cumcount()
+total_foils = foils.groupby('participant')['mem_ground_truth'].transform('count')
+foils['control_condition'] = np.where(row_numbers < (total_foils / 2), 'high', 'low')
+
+# Optional: Print a quick check to verify the split worked!
+print("Foil dummy condition assignment complete:")
+print(foils[['participant', 'mem_filename', 'control_condition']].head(10))
+
+# =============================================================================
+# STEP 4: Combine targets and foils; add contrast codes
+# =============================================================================
+
+# 1. Combine targets and foils into a single dataframe
+# ignore_index=True ensures the new dataframe has a clean row count from 0 to the end
+model_data = pd.concat([targets, foils], ignore_index=True)
+
+# 2. Apply contrast coding for Item Type
+# If the item is a target ('seen'), assign +0.5. Otherwise (it's a foil), assign -0.5.
+model_data['item_type_c'] = np.where(model_data['mem_ground_truth'] == 'seen', 0.5, -0.5)
+
+# 3. Apply contrast coding for Control Condition
+# If the condition is 'high', assign +0.5. Otherwise (it's 'low'), assign -0.5.
+model_data['control_c'] = np.where(model_data['control_condition'] == 'high', 0.5, -0.5)
+
+# 4. Convert the finalized pandas dataframe into a polars dataframe for pymer4
+model_data_pl = pl.DataFrame(model_data)
+
+# Print a quick check to verify our final dataset is ready!
+print("\n--- STEP 4 COMPLETE ---")
+print(f"Final modeling dataset created with {len(model_data_pl)} rows.")
+print("First 5 rows of contrast codes:")
+print(model_data[['mem_ground_truth', 'item_type_c', 'control_condition', 'control_c']].head())
