@@ -129,6 +129,28 @@ else:
 
 data = data[~data["participant"].isin(listofexcludedparticipants)].copy()
 
+# =============================================================================
+# MANIPULATION CHECK: Control Detection & SoA Ratings
+# =============================================================================
+
+# 1. Calculate the mean accuracy and SoA rating for EACH participant per condition
+pt_means = data.groupby(['participant', 'control_condition'])[['detection_accuracy', 'agency_rating']].mean().reset_index()
+
+# 2. Calculate the "Grand Mean" across all participants for each condition
+manipulation_summary = pt_means.groupby('control_condition')[['detection_accuracy', 'agency_rating']].mean().reset_index()
+
+# 3. Convert accuracy from a decimal (e.g., 0.85) to a percentage (85.0)
+manipulation_summary['detection_accuracy'] = manipulation_summary['detection_accuracy'] * 100
+
+# 4. Print the results cleanly!
+print("\n" + "="*40)
+print("MANIPULATION CHECK SUMMARY")
+print("="*40)
+print("Are Accuracy and SoA higher in the 'high' condition?")
+print("-" * 40)
+print(manipulation_summary.round(2).to_string(index=False)) 
+print("="*40 + "\n")
+
 #-----------------------------------
 # NOW TRY TO LOAD AND FILTER THE RECOGNITION DATA
 # file naming convention is: CDmem_*_recognition.csv
@@ -205,7 +227,8 @@ false_alarm_stats = (
     .groupby("participant")["mem_response"]
     .value_counts()
     .unstack(fill_value=0)
-    .rename(columns={"yes": "false_alarms", "no": "correct_rejections"})
+    # Changed "yes"/"no" to "old"/"new" to match your data!
+    .rename(columns={"old": "false_alarms", "new": "correct_rejections"})
     .reset_index()
 )
 
@@ -222,10 +245,14 @@ for participant, subject_data in clean_recog_data.groupby("participant"):
     correct_rejections = int(fa_row["correct_rejections"].iloc[0])
 
     for condition, condition_data in subject_data[subject_data["mem_ground_truth"] == "seen"].groupby("controlled"):
+        # We also need to make sure your 'controlled' column uses 'yes'/'no' or update this to 'high'/'low'!
         if condition not in {"yes", "no"}:
             continue
-        hits = (condition_data["mem_response"] == "yes").sum()
-        misses = (condition_data["mem_response"] == "no").sum()
+        
+        # Changed "yes"/"no" to "old"/"new" here as well
+        hits = (condition_data["mem_response"] == "old").sum()
+        misses = (condition_data["mem_response"] == "new").sum()
+        
         d_prime = compute_d_prime(hits, misses, false_alarms, correct_rejections)
         rows.append({
             "participant": participant,
