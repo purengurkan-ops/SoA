@@ -1,0 +1,484 @@
+filename,image_name,category_name,object_name,arousal_score,memorability_score,item_id
+coffee_filter_05s.jpg,coffee_filter/coffee_filter_05s.jpg,(uncategorised),coffee filter,3.94,0.7805,1
+doorstop_06s.jpg,doorstop/doorstop_06s.jpg,(uncategorised),doorstop,4.1163,0.7838,2
+snowman_03s.jpg,snowman/snowman_03s.jpg,(uncategorised),snowman,4.0889,0.7949,4
+origami_03s.jpg,origami/origami_03s.jpg,(uncategorised),origami,3.8182,0.7949,5
+cornhusk_03s.jpg,cornhusk/cornhusk_03s.jpg,(uncategorised),cornhusk,3.9804,0.7805,6
+teabag_09s.jpg,teabag/teabag_09s.jpg,(uncategorised),teabag,4.2391,0.7805,7
+cigarette_15s.jpg,cigarette/cigarette_15s.jpg,(uncategorised),cigarette,4.7708,0.7561,8
+stair_16s.jpg,stair/stair_16s.jpg,(uncategorised),stair,3.7647,0.75,9
+holster_09s.jpg,holster/holster_09s.jpg,(uncategorised),holster,4.7234,0.7805,10
+brick_09s.jpg,brick/brick_09s.jpg,(uncategorised),brick,4.1,0.7949,11
+dishrag_10s.jpg,dishrag/dishrag_10s.jpg,(uncategorised),dishrag,3.8,0.775,12
+emerald_08n.jpg,emerald/emerald_08n.jpg,(uncategorised),emerald,4.1702,0.775,13
+blimp_08n.jpg,blimp/blimp_08n.jpg,(uncategorised),blimp,4.3617,0.7949,14
+gold_13s.jpg,gold/gold_13s.jpg,(uncategorised),gold,4.2549,0.7949,15
+sleeping_bag_09s.jpg,sleeping_bag/sleeping_bag_09s.jpg,(uncategorised),sleeping bag,4.0638,0.7674,16
+cork_10s.jpg,cork/cork_10s.jpg,(uncategorised),cork,4.1489,0.7568,17
+sandbox_06s.jpg,sandbox/sandbox_06s.jpg,(uncategorised),sandbox,4.0417,0.7619,18
+nest_01b.jpg,nest/nest_01b.jpg,(uncategorised),nest,3.7609,0.7949,19
+tab_09s.jpg,tab/tab_09s.jpg,(uncategorised),tab,4.5385,0.7805,20
+shoelace_06s.jpg,shoelace/shoelace_06s.jpg,(uncategorised),shoelace,4.0,0.7907,21
+sink_03s.jpg,sink/sink_03s.jpg,(uncategorised),sink,4.4,0.7857,23
+eggshell_13s.jpg,eggshell/eggshell_13s.jpg,(uncategorised),eggshell,4.3673,0.8,24
+footprint_11s.jpg,footprint/footprint_11s.jpg,(uncategorised),footprint,3.5455,0.7805,25
+mosquito_net_02s.jpg,mosquito_net/mosquito_net_02s.jpg,(uncategorised),mosquito net,3.5238,0.7692,26
+urinal_10s.jpg,urinal/urinal_10s.jpg,(uncategorised),urinal,4.4783,0.7805,28
+retainer_08s.jpg,retainer/retainer_08s.jpg,(uncategorised),retainer,4.186,0.7632,30
+blindfold_16s.jpg,blindfold/blindfold_16s.jpg,(uncategorised),blindfold,4.2667,0.7805,31
+handprint_12s.jpg,handprint/handprint_12s.jpg,(uncategorised),handprint,3.75,0.7949,32
+hanger_13n.jpg,hanger/hanger_13n.jpg,(uncategorised),hanger,4.0,0.7895,33
+stamp1_05s.jpg,stamp1/stamp1_05s.jpg,(uncategorised),stamp,3.6415,0.7805,34
+sewage_01b.jpg,sewage/sewage_01b.jpg,(uncategorised),sewage,4.2041,0.7838,35
+mannequin_03s.jpg,mannequin/mannequin_03s.jpg,(uncategorised),mannequin,4.2553,0.7561,36
+snowball_01b.jpg,snowball/snowball_01b.jpg,(uncategorised),snowball,4.0889,0.7857,37
+videocassette_07n.jpg,videocassette/videocassette_07n.jpg,(uncategorised),videocassette,3.7959,0.75,38
+ironing_board_01b.jpg,ironing_board/ironing_board_01b.jpg,(uncategorised),ironing board,4.125,0.7692,39
+sponge_02s.jpg,sponge/sponge_02s.jpg,(uncategorised),sponge,3.6667,0.7692,40
+riser_11s.jpg,riser/riser_11s.jpg,(uncategorised),riser,3.9792,0.7907,41
+drumstick_03s.jpg,drumstick/drumstick_03s.jpg,(uncategorised),drumstick,3.8667,0.7949,42
+braid_09s.jpg,braid/braid_09s.jpg,(uncategorised),braid,4.1667,0.7949,43
+wooden_leg_02s.jpg,wooden_leg/wooden_leg_02s.jpg,(uncategorised),wooden leg,4.4884,0.7619,44
+money_14s.jpg,money/money_14s.jpg,(uncategorised),money,4.0,0.8,45
+orange_rind_15s.jpg,orange_rind/orange_rind_15s.jpg,(uncategorised),orange rind,4.0189,0.775,46
+spur_10s.jpg,spur/spur_10s.jpg,(uncategorised),spur,4.6939,0.7805,47
+toilet_12s.jpg,toilet/toilet_12s.jpg,(uncategorised),toilet,4.617,0.8,48
+bubble_wrap_11s.jpg,bubble_wrap/bubble_wrap_11s.jpg,(uncategorised),bubble wrap,3.7872,0.7805,49
+crystal1_05s.jpg,crystal1/crystal1_05s.jpg,(uncategorised),crystal,4.2,0.7805,50
+wing_03s.jpg,wing/wing_03s.jpg,(uncategorised),wing,4.4894,0.7895,51
+cookie_cutter_09s.jpg,cookie_cutter/cookie_cutter_09s.jpg,(uncategorised),cookie cutter,4.0,0.75,52
+windsock_09s.jpg,windsock/windsock_09s.jpg,(uncategorised),windsock,4.3137,0.7638,54
+crucifix_09s.jpg,crucifix/crucifix_09s.jpg,(uncategorised),crucifix,3.8409,0.8,55
+coal_08s.jpg,coal/coal_08s.jpg,(uncategorised),coal,4.6327,0.7805,56
+outlet_02s.jpg,outlet/outlet_02s.jpg,(uncategorised),outlet,4.0222,0.75,57
+coin_15s.jpg,coin/coin_15s.jpg,(uncategorised),coin,3.6538,0.8,58
+ramp_09s.jpg,ramp/ramp_09s.jpg,(uncategorised),ramp,4.0612,0.775,59
+honeycomb_08s.jpg,honeycomb/honeycomb_08s.jpg,(uncategorised),honeycomb,4.3696,0.7692,60
+cross_05s.jpg,cross/cross_05s.jpg,(uncategorised),cross,3.6327,0.7692,61
+comic_book_08s.jpg,comic_book/comic_book_08s.jpg,(uncategorised),comic book,3.9216,0.7561,63
+firewood_05s.jpg,firewood/firewood_05s.jpg,(uncategorised),firewood,4.2667,0.7561,64
+playpen_05s.jpg,playpen/playpen_05s.jpg,(uncategorised),playpen,3.8913,0.7907,65
+pill_04s.jpg,pill/pill_04s.jpg,(uncategorised),pill,4.0,0.7949,66
+banana_peel_14s.jpg,banana_peel/banana_peel_14s.jpg,(uncategorised),banana peel,4.12,0.775,67
+fishhook_09s.jpg,fishhook/fishhook_09s.jpg,(uncategorised),fishhook,4.4667,0.7955,68
+pipe1_10s.jpg,pipe1/pipe1_10s.jpg,(uncategorised),pipe,4.3125,0.75,69
+solar_panel_04s.jpg,solar_panel/solar_panel_04s.jpg,(uncategorised),solar panel,3.9216,0.7838,70
+icicle_12s.jpg,icicle/icicle_12s.jpg,(uncategorised),icicle,3.8636,0.7561,71
+diamond_14s.jpg,diamond/diamond_14s.jpg,(uncategorised),diamond,3.9375,0.7857,72
+pallet_11s.jpg,pallet/pallet_11s.jpg,(uncategorised),pallet,4.5417,0.7857,73
+cassette_07s.jpg,cassette/cassette_07s.jpg,(uncategorised),cassette,4.0909,0.7955,74
+hydrant_12s.jpg,hydrant/hydrant_12s.jpg,(uncategorised),hydrant,4.5116,0.7949,75
+ice_cube_03s.jpg,ice_cube/ice_cube_03s.jpg,(uncategorised),ice cube,4.125,0.775,76
+seesaw_03s.jpg,seesaw/seesaw_03s.jpg,(uncategorised),seesaw,3.9787,0.7619,77
+float_04s.jpg,float/float_04s.jpg,(uncategorised),float,3.7174,0.7857,78
+pet_food_04s.jpg,pet_food/pet_food_04s.jpg,(uncategorised),pet food,3.9048,0.7805,79
+straw2_09s.jpg,straw2/straw2_09s.jpg,(uncategorised),straw,3.8824,0.7805,80
+card_07s.jpg,card/card_07s.jpg,(uncategorised),card,4.1957,0.75,81
+pacifier_04s.jpg,pacifier/pacifier_04s.jpg,(uncategorised),pacifier,3.8,0.7805,82
+spider_web_06s.jpg,spider_web/spider_web_06s.jpg,(uncategorised),spider web,4.4565,0.75,83
+wood_03s.jpg,wood/wood_03s.jpg,(uncategorised),wood,4.3061,0.7692,84
+ruby_14s.jpg,ruby/ruby_14s.jpg,(uncategorised),ruby,4.0435,0.7692,85
+mullet_03s.jpg,mullet/mullet_03s.jpg,(uncategorised),mullet,4.1429,0.8,86
+sim_card_10s.jpg,sim_card/sim_card_10s.jpg,(uncategorised),sim card,4.0,0.8,88
+trap_07s.jpg,trap/trap_07s.jpg,(uncategorised),trap,4.3529,0.7805,89
+tattoo_04s.jpg,tattoo/tattoo_04s.jpg,(uncategorised),tattoo,4.08,0.7949,90
+diskette_03s.jpg,diskette/diskette_03s.jpg,(uncategorised),diskette,3.6809,0.7857,91
+contact_lens_13s.jpg,contact_lens/contact_lens_13s.jpg,(uncategorised),contact lens,3.7708,0.75,92
+fingerprint_01b.jpg,fingerprint/fingerprint_01b.jpg,(uncategorised),fingerprint,3.9038,0.7805,93
+phone_booth_06s.jpg,phone_booth/phone_booth_06s.jpg,(uncategorised),phone booth,4.087,0.7561,94
+headset_09s.jpg,headset/headset_09s.jpg,(uncategorised),headset,3.8636,0.775,95
+touchpad_11s.jpg,touchpad/touchpad_11s.jpg,(uncategorised),touchpad,3.9149,0.7949,96
+battery_10s.jpg,battery/battery_10s.jpg,(uncategorised),battery,3.8367,0.7561,97
+turf_07s.jpg,turf/turf_07s.jpg,(uncategorised),turf,4.3673,0.7857,98
+block_15s.jpg,block/block_15s.jpg,(uncategorised),block,3.7714,0.7805,99
+bib_13n.jpg,bib/bib_13n.jpg,(uncategorised),bib,3.6415,0.7805,100
+bead_13s.jpg,bead/bead_13s.jpg,arts and crafts supply,bead,3.7021,0.75,101
+cardboard_07s.jpg,cardboard/cardboard_07s.jpg,arts and crafts supply,cardboard,3.5854,0.7619,102
+chalk_02s.jpg,chalk/chalk_02s.jpg,arts and crafts supply,chalk,3.9333,0.7949,104
+sequin_08s.jpg,sequin/sequin_08s.jpg,arts and crafts supply,sequin,3.7727,0.7857,106
+yarn_10s.jpg,yarn/yarn_10s.jpg,arts and crafts supply,yarn,3.9333,0.7805,107
+pin_12s.jpg,pin/pin_12s.jpg,arts and crafts supply,pin,4.4898,0.75,108
+pencil_10s.jpg,pencil/pencil_10s.jpg,arts and crafts supply,pencil,3.766,0.7949,109
+paintbrush_02s.jpg,paintbrush/paintbrush_02s.jpg,arts and crafts supply,paintbrush,4.5294,0.7949,110
+paint_01b.jpg,paint/paint_01b.jpg,arts and crafts supply,paint,3.9783,0.7692,111
+pencil_sharpener_11s.jpg,pencil_sharpener/pencil_sharpener_11s.jpg,arts and crafts supply,pencil sharpener,3.9487,0.7756,112
+marker_08s.jpg,marker/marker_08s.jpg,arts and crafts supply,marker,4.06,0.7674,113
+glue_11s.jpg,glue/glue_11s.jpg,arts and crafts supply,glue,4.1923,0.7857,114
+donut_15s.jpg,donut/donut_15s.jpg,breakfast food,donut,4.2826,0.8,115
+toast_13s.jpg,toast/toast_13s.jpg,breakfast food,toast,3.6316,0.7805,116
+peanut_butter_07s.jpg,peanut_butter/peanut_butter_07s.jpg,breakfast food,peanut butter,3.5833,0.775,117
+jam_01b.jpg,jam/jam_01b.jpg,breakfast food,jam,3.7073,0.7674,118
+croissant_13s.jpg,croissant/croissant_13s.jpg,breakfast food,croissant,4.2222,0.7805,119
+omelet_16s.jpg,omelet/omelet_16s.jpg,breakfast food,omelet,3.6122,0.7857,120
+egg_15s.jpg,egg/egg_15s.jpg,breakfast food,egg,3.8511,0.7907,121
+hamburger_10s.jpg,hamburger/hamburger_10s.jpg,breakfast food,hamburger,3.878,0.8,122
+scrambled_egg_12s.jpg,scrambled_egg/scrambled_egg_12s.jpg,breakfast food,scrambled egg,4.0769,0.775,123
+cream_cheese_05s.jpg,cream_cheese/cream_cheese_05s.jpg,breakfast food,cream cheese,3.9216,0.8,124
+french_fries_11s.jpg,french_fries/french_fries_11s.jpg,breakfast food,french fries,3.8333,0.7857,125
+ham_05s.jpg,ham/ham_05s.jpg,breakfast food,ham,4.2292,0.7674,126
+roll_01b.jpg,roll/roll_01b.jpg,breakfast food,roll,4.175,0.7692,127
+bagel_11s.jpg,bagel/bagel_11s.jpg,breakfast food,bagel,4.102,0.75,128
+pancake_08s.jpg,pancake/pancake_08s.jpg,breakfast food,pancake,3.7381,0.8,129
+sausage_08s.jpg,sausage/sausage_08s.jpg,breakfast food,sausage,4.4314,0.75,130
+waffle_17s.jpg,waffle/waffle_17s.jpg,breakfast food,waffle,3.9216,0.7895,131
+candy_10s.jpg,candy/candy_10s.jpg,candy,candy,4.0213,0.8,132
+candy_cane_06s.jpg,candy_cane/candy_cane_06s.jpg,candy,candy cane,4.2391,0.8,133
+jelly_bean_13n.jpg,jelly_bean/jelly_bean_13n.jpg,candy,jelly bean,3.7778,0.7857,134
+cotton_candy_08s.jpg,cotton_candy/cotton_candy_08s.jpg,candy,cotton candy,4.0227,0.8,135
+lollipop_01b.jpg,lollipop/lollipop_01b.jpg,candy,lollipop,3.7073,0.7805,137
+taffy_08s.jpg,taffy/taffy_08s.jpg,candy,taffy,3.84,0.7561,138
+marshmallow_12s.jpg,marshmallow/marshmallow_12s.jpg,candy,marshmallow,3.64,0.7907,139
+chocolate_11s.jpg,chocolate/chocolate_11s.jpg,candy,chocolate,3.5366,0.7619,140
+caramel_09s.jpg,caramel/caramel_09s.jpg,candy,caramel,4.1875,0.775,141
+peppermint_02s.jpg,peppermint/peppermint_02s.jpg,candy,peppermint,4.3333,0.75,142
+gumball_02s.jpg,gumball/gumball_02s.jpg,candy,gumball,3.8491,0.7857,143
+gum_10s.jpg,gum/gum_10s.jpg,candy,gum,3.9412,0.7949,144
+boa_02s.jpg,boa/boa_02s.jpg,clothing,boa,3.8372,0.75,145
+bowtie_14s.jpg,bowtie/bowtie_14s.jpg,clothing,bowtie,3.6275,0.7805,146
+garter_02s.jpg,garter/garter_02s.jpg,clothing,garter,3.8,0.75,147
+polo_shirt_14s.jpg,polo_shirt/polo_shirt_14s.jpg,clothing,polo shirt,3.9111,0.775,148
+chaps_14s.jpg,chaps/chaps_14s.jpg,clothing,chaps,3.6226,0.7949,149
+headdress_11s.jpg,headdress/headdress_11s.jpg,clothing,headdress,4.3556,0.7805,150
+kilt_11s.jpg,kilt/kilt_11s.jpg,clothing,kilt,4.5217,0.75,151
+jumpsuit_11s.jpg,jumpsuit/jumpsuit_11s.jpg,clothing,jumpsuit,4.1489,0.8,152
+sweater_13s.jpg,sweater/sweater_13s.jpg,clothing,sweater,4.098,0.775,153
+bikini_09s.jpg,bikini/bikini_09s.jpg,clothing,bikini,4.4167,0.7692,154
+bracelet1_12s.jpg,bracelet1/bracelet1_12s.jpg,clothing,bracelet,3.88,0.775,155
+bandanna_10s.jpg,bandanna/bandanna_10s.jpg,clothing,bandanna,3.7708,0.7857,156
+corset_09s.jpg,corset/corset_09s.jpg,clothing,corset,4.0444,0.8,157
+skirt_02s.jpg,skirt/skirt_02s.jpg,clothing,skirt,3.5882,0.775,158
+boot_09s.jpg,boot/boot_09s.jpg,clothing,boot,4.6667,0.7632,159
+lingerie_06s.jpg,lingerie/lingerie_06s.jpg,clothing,lingerie,4.6667,0.7727,160
+jersey_07s.jpg,jersey/jersey_07s.jpg,clothing,jersey,3.6531,0.7561,161
+nightshirt_07s.jpg,nightshirt/nightshirt_07s.jpg,clothing,nightshirt,3.8542,0.7632,162
+cape_06s.jpg,cape/cape_06s.jpg,clothing,cape,4.1731,0.8,163
+glove_11s.jpg,glove/glove_11s.jpg,clothing,glove,3.8462,0.7805,164
+fishnet_stockings_14s.jpg,fishnet_stockings/fishnet_stockings_14s.jpg,clothing,fishnet stockings,4.16,0.7632,165
+bow1_01b.jpg,bow1/bow1_01b.jpg,clothing,bow,3.9362,0.7949,166
+shorts_12s.jpg,shorts/shorts_12s.jpg,clothing,shorts,3.95,0.8,167
+kimono_06s.jpg,kimono/kimono_06s.jpg,clothing,kimono,4.1304,0.7619,168
+tiara_08s.jpg,tiara/tiara_08s.jpg,clothing,tiara,3.6739,0.7949,169
+bathrobe_07s.jpg,bathrobe/bathrobe_07s.jpg,clothing,bathrobe,4.0408,0.7907,170
+vest_09s.jpg,vest/vest_09s.jpg,clothing,vest,3.6,0.8,172
+straightjacket_05s.jpg,straightjacket/straightjacket_05s.jpg,clothing,straightjacket,3.7391,0.7561,173
+stockings_06s.jpg,stockings/stockings_06s.jpg,clothing,stockings,4.32,0.7619,175
+turban_02s.jpg,turban/turban_02s.jpg,clothing,turban,4.2653,0.7949,177
+pants_11s.jpg,pants/pants_11s.jpg,clothing,pants,3.9048,0.8,178
+belt_14s.jpg,belt/belt_14s.jpg,clothing,belt,4.0208,0.7805,179
+headband_04s.jpg,headband/headband_04s.jpg,clothing,headband,4.0,0.75,180
+jeans_07s.jpg,jeans/jeans_07s.jpg,clothing,jeans,4.1064,0.775,181
+cloak_13s.jpg,cloak/cloak_13s.jpg,clothing,cloak,4.0417,0.7955,182
+pantsuit_07s.jpg,pantsuit/pantsuit_07s.jpg,clothing,pantsuit,4.2093,0.75,183
+headscarf_07s.jpg,headscarf/headscarf_07s.jpg,clothing,headscarf,4.0588,0.7805,184
+sweatsuit_06s.jpg,sweatsuit/sweatsuit_06s.jpg,clothing,sweatsuit,3.9,0.775,185
+leggings_12s.jpg,leggings/leggings_12s.jpg,clothing,leggings,3.9318,0.7949,186
+bowler_hat_03s.jpg,bowler_hat/bowler_hat_03s.jpg,clothing,bowler hat,3.7442,0.7805,187
+pajamas_13s.jpg,pajamas/pajamas_13s.jpg,clothing,pajamas,3.6809,0.8,188
+eye_patch_11s.jpg,eye_patch/eye_patch_11s.jpg,clothing,eye patch,3.75,0.8,189
+costume_08s.jpg,costume/costume_08s.jpg,clothing,costume,4.16,0.7949,190
+wetsuit_09s.jpg,wetsuit/wetsuit_09s.jpg,clothing,wetsuit,4.5111,0.7907,191
+fur_coat_12s.jpg,fur_coat/fur_coat_12s.jpg,clothing,fur coat,4.0816,0.7805,192
+cummerbund_15s.jpg,cummerbund/cummerbund_15s.jpg,clothing,cummerbund,3.9574,0.7949,193
+boxer_shorts_09s.jpg,boxer_shorts/boxer_shorts_09s.jpg,clothing,boxer shorts,4.5306,0.7907,194
+t-shirt_06s.jpg,t-shirt/t-shirt_06s.jpg,clothing,t-shirt,3.6739,0.7692,195
+apron_10s.jpg,apron/apron_10s.jpg,clothing,apron,3.9778,0.7895,196
+suspenders_09s.jpg,suspenders/suspenders_09s.jpg,clothing,suspenders,4.098,0.775,197
+sock_13s.jpg,sock/sock_13s.jpg,clothing,sock,3.8889,0.7619,198
+undershirt_04s.jpg,undershirt/undershirt_04s.jpg,clothing,undershirt,3.9423,0.7762,199
+leotard_13s.jpg,leotard/leotard_13s.jpg,clothing,leotard,4.14,0.8,200
+mitten_08s.jpg,mitten/mitten_08s.jpg,clothing,mitten,3.6939,0.7561,201
+robe_10s.jpg,robe/robe_10s.jpg,clothing,robe,3.975,0.7692,202
+veil_01s.jpg,veil/veil_01s.jpg,clothing,veil,4.02,0.7857,203
+cardigan_11s.jpg,cardigan/cardigan_11s.jpg,clothing,cardigan,3.9583,0.75,204
+toga_04s.jpg,toga/toga_04s.jpg,clothing,toga,4.5455,0.75,205
+spacesuit_12s.jpg,spacesuit/spacesuit_12s.jpg,clothing,spacesuit,4.2857,0.7778,206
+suit_14s.jpg,suit/suit_14s.jpg,clothing,suit,3.9167,0.7568,207
+turtleneck_10s.jpg,turtleneck/turtleneck_10s.jpg,clothing,turtleneck,4.0204,0.7805,208
+bulletproof_vest_03s.jpg,bulletproof_vest/bulletproof_vest_03s.jpg,clothing,bulletproof vest,4.549,0.7949,209
+coverall_11s.jpg,coverall/coverall_11s.jpg,clothing,coverall,4.1277,0.75,210
+tube_top_10s.jpg,tube_top/tube_top_10s.jpg,clothing,tube top,4.3043,0.8,211
+lab_coat_04s.jpg,lab_coat/lab_coat_04s.jpg,clothing,lab coat,3.7561,0.8,212
+visor_13s.jpg,visor/visor_13s.jpg,clothing,visor,3.5652,0.7907,213
+swimsuit_08s.jpg,swimsuit/swimsuit_08s.jpg,clothing,swimsuit,4.6,0.8,214
+cufflink_05s.jpg,cufflink/cufflink_05s.jpg,clothing accessory,cufflink,3.875,0.7805,215
+bracelet2_08s.jpg,bracelet2/bracelet2_08s.jpg,clothing accessory,bracelet,3.8667,0.7949,217
+belt_buckle_14s.jpg,belt_buckle/belt_buckle_14s.jpg,clothing accessory,belt buckle,4.093,0.7632,218
+insole_02s.jpg,insole/insole_02s.jpg,clothing accessory,insole,3.8723,0.775,219
+pesto_07s.jpg,pesto/pesto_07s.jpg,condiment,pesto,4.6667,0.775,220
+applesauce_05s.jpg,applesauce/applesauce_05s.jpg,condiment,applesauce,3.9792,0.7561,222
+butter_06s.jpg,butter/butter_06s.jpg,condiment,butter,3.9,0.8,223
+ginger_10s.jpg,ginger/ginger_10s.jpg,condiment,ginger,4.0889,0.7561,224
+ketchup_10s.jpg,ketchup/ketchup_10s.jpg,condiment,ketchup,4.1321,0.7838,225
+soy_sauce_10s.jpg,soy_sauce/soy_sauce_10s.jpg,condiment,soy sauce,4.2,0.7805,226
+wrench_04s.jpg,wrench/wrench_04s.jpg,construction equipment,wrench,4.5455,0.8,227
+pliers_10s.jpg,pliers/pliers_10s.jpg,construction equipment,pliers,4.5,0.75,228
+hot_tub_07s.jpg,hot_tub/hot_tub_07s.jpg,container,hot tub,4.0,0.7805,229
+water_heater_01b.jpg,water_heater/water_heater_01b.jpg,container,water heater,4.16,0.7805,230
+sarcophagus_08s.jpg,sarcophagus/sarcophagus_08s.jpg,container,sarcophagus,4.375,0.8,231
+filing_cabinet_07s.jpg,filing_cabinet/filing_cabinet_07s.jpg,container,filing cabinet,3.9762,0.7727,232
+pan_15s.jpg,pan/pan_15s.jpg,container,pan,4.0,0.7857,233
+test_tube_17s.jpg,test_tube/test_tube_17s.jpg,container,test tube,3.9149,0.8,234
+saltshaker_08s.jpg,saltshaker/saltshaker_08s.jpg,container,saltshaker,3.8864,0.8,235
+shopping_basket_05s.jpg,shopping_basket/shopping_basket_05s.jpg,container,shopping basket,4.2667,0.775,236
+pillbox_13s.jpg,pillbox/pillbox_13s.jpg,container,pillbox,3.9778,0.7805,237
+coffin_06s.jpg,coffin/coffin_06s.jpg,container,coffin,4.6444,0.7692,238
+wallet_05s.jpg,wallet/wallet_05s.jpg,container,wallet,3.6818,0.7692,239
+container_04s.jpg,container/container_04s.jpg,container,container,3.925,0.7805,240
+hot-water_bottle_05s.jpg,hot-water_bottle/hot-water_bottle_05s.jpg,container,hot-water bottle,4.0625,0.8,241
+footbath_02s.jpg,footbath/footbath_02s.jpg,container,footbath,3.9773,0.7632,242
+tent_12s.jpg,tent/tent_12s.jpg,container,tent,3.8261,0.7805,243
+bin_01b.jpg,bin/bin_01b.jpg,container,bin,4.1,0.7805,244
+suitcase_11s.jpg,suitcase/suitcase_11s.jpg,container,suitcase,3.7292,0.7561,245
+piggy_bank_01b.jpg,piggy_bank/piggy_bank_01b.jpg,container,piggy bank,3.5682,0.7805,246
+dumpster_02s.jpg,dumpster/dumpster_02s.jpg,container,dumpster,4.0426,0.7561,247
+pocket_01b.jpg,pocket/pocket_01b.jpg,container,pocket,3.766,0.7692,249
+bedpan_08s.jpg,bedpan/bedpan_08s.jpg,container,bedpan,3.8679,0.7692,250
+locker_12s.jpg,locker/locker_12s.jpg,container,locker,3.6364,0.7805,251
+baklava_11s.jpg,baklava/baklava_11s.jpg,dessert,baklava,4.1111,0.7857,252
+eclair_13s.jpg,eclair/eclair_13s.jpg,dessert,eclair,4.0682,0.8,253
+creme_brulee_07s.jpg,creme_brulee/creme_brulee_07s.jpg,dessert,creme brulee,3.5556,0.7632,254
+cheesecake_13s.jpg,cheesecake/cheesecake_13s.jpg,dessert,cheesecake,3.9167,0.7805,255
+tiramisu_12s.jpg,tiramisu/tiramisu_12s.jpg,dessert,tiramisu,3.86,0.7805,256
+fruitcake_05s.jpg,fruitcake/fruitcake_05s.jpg,dessert,fruitcake,4.66,0.7805,257
+ice_cream_10s.jpg,ice_cream/ice_cream_10s.jpg,dessert,ice cream,3.6809,0.8,258
+cheese_07s.jpg,cheese/cheese_07s.jpg,dessert,cheese,3.9111,0.7857,259
+birthday_cake_12s.jpg,birthday_cake/birthday_cake_12s.jpg,dessert,birthday cake,4.2683,0.775,260
+cookie_11s.jpg,cookie/cookie_11s.jpg,dessert,cookie,4.2245,0.7561,261
+flan_02s.jpg,flan/flan_02s.jpg,dessert,flan,4.0625,0.775,262
+parfait_17s.jpg,parfait/parfait_17s.jpg,dessert,parfait,3.5208,0.8,263
+shortbread_08s.jpg,shortbread/shortbread_08s.jpg,dessert,shortbread,3.9545,0.7778,264
+sorbet_07s.jpg,sorbet/sorbet_07s.jpg,dessert,sorbet,3.9091,0.7727,265
+pie_02s.jpg,pie/pie_02s.jpg,dessert,pie,4.0,0.7561,266
+coffee_13s.jpg,coffee/coffee_13s.jpg,drink,coffee,4.0222,0.8,267
+hot_chocolate_12s.jpg,hot_chocolate/hot_chocolate_12s.jpg,drink,hot chocolate,3.875,0.7561,268
+latte_01b.jpg,latte/latte_01b.jpg,drink,latte,4.0213,0.75,269
+eggnog_02s.jpg,eggnog/eggnog_02s.jpg,drink,eggnog,3.5581,0.8,270
+curling_iron_03s.jpg,curling_iron/curling_iron_03s.jpg,electronic device,curling iron,4.6809,0.7692,271
+computer_screen_12s.jpg,computer_screen/computer_screen_12s.jpg,electronic device,computer screen,3.9762,0.7692,272
+vending_machine_03s.jpg,vending_machine/vending_machine_03s.jpg,electronic device,vending machine,4.0909,0.7949,273
+waffle_iron_14s.jpg,waffle_iron/waffle_iron_14s.jpg,electronic device,waffle iron,4.0889,0.7955,274
+electric_chair_11s.jpg,electric_chair/electric_chair_11s.jpg,electronic device,electric chair,4.5,0.75,275
+mixer_03s.jpg,mixer/mixer_03s.jpg,electronic device,mixer,4.2245,0.7838,276
+slot_machine_05s.jpg,slot_machine/slot_machine_05s.jpg,electronic device,slot machine,4.6279,0.7561,277
+hairdryer_06s.jpg,hairdryer/hairdryer_06s.jpg,electronic device,hairdryer,4.1556,0.7561,278
+joystick_02s.jpg,joystick/joystick_02s.jpg,electronic device,joystick,4.0,0.7949,279
+mouse2_09s.jpg,mouse2/mouse2_09s.jpg,electronic device,mouse,3.8936,0.7561,280
+vacuum_04s.jpg,vacuum/vacuum_04s.jpg,electronic device,vacuum,4.3542,0.7568,281
+metal_detector_04s.jpg,metal_detector/metal_detector_04s.jpg,electronic device,metal detector,4.6957,0.8,282
+blower_10s.jpg,blower/blower_10s.jpg,electronic device,blower,4.1633,0.775,283
+cellphone_11s.jpg,cellphone/cellphone_11s.jpg,electronic device,cellphone,4.2041,0.7632,284
+refrigerator_11s.jpg,refrigerator/refrigerator_11s.jpg,electronic device,refrigerator,3.8333,0.75,285
+washing_machine_06s.jpg,washing_machine/washing_machine_06s.jpg,electronic device,washing machine,4.2826,0.8,286
+pinball_09s.jpg,pinball/pinball_09s.jpg,electronic device,pinball,4.3704,0.7561,287
+barrette_09s.jpg,barrette/barrette_09s.jpg,fastener,barrette,3.8,0.8,288
+hook1_15s.jpg,hook1/hook1_15s.jpg,fastener,hook,4.12,0.7857,289
+tack_06s.jpg,tack/tack_06s.jpg,fastener,tack,4.4902,0.7561,290
+thumbtack_15n.jpg,thumbtack/thumbtack_15n.jpg,fastener,thumbtack,4.4565,0.7632,291
+clasp_03s.jpg,clasp/clasp_03s.jpg,fastener,clasp,4.5745,0.7561,292
+clothespin_08s.jpg,clothespin/clothespin_08s.jpg,fastener,clothespin,4.0638,0.7895,293
+peg_08s.jpg,peg/peg_08s.jpg,fastener,peg,3.7021,0.7962,294
+screw_05s.jpg,screw/screw_05s.jpg,fastener,screw,4.6591,0.7805,295
+paperclip_07s.jpg,paperclip/paperclip_07s.jpg,fastener,paperclip,3.7857,0.775,296
+nail_08s.jpg,nail/nail_08s.jpg,fastener,nail,4.5417,0.7907,297
+staple_06s.jpg,staple/staple_06s.jpg,fastener,staple,4.5435,0.7568,298
+safety_pin_03s.jpg,safety_pin/safety_pin_03s.jpg,fastener,safety pin,4.766,0.8,299
+peanut_12s.jpg,peanut/peanut_12s.jpg,food,peanut,3.8333,0.7949,300
+dip_04s.jpg,dip/dip_04s.jpg,food,dip,4.5652,0.7568,301
+cracker_01b.jpg,cracker/cracker_01b.jpg,food,cracker,4.24,0.775,302
+sauerkraut_03s.jpg,sauerkraut/sauerkraut_03s.jpg,food,sauerkraut,4.0909,0.7692,303
+meatloaf_09s.jpg,meatloaf/meatloaf_09s.jpg,food,meatloaf,4.38,0.7857,304
+quesadilla_02s.jpg,quesadilla/quesadilla_02s.jpg,food,quesadilla,4.0667,0.75,305
+pomegranate_11n.jpg,pomegranate/pomegranate_11n.jpg,food,pomegranate,3.898,0.75,306
+piecrust_13s.jpg,piecrust/piecrust_13s.jpg,food,piecrust,3.7857,0.7949,307
+coffee_bean_12s.jpg,coffee_bean/coffee_bean_12s.jpg,food,coffee bean,3.7451,0.8,308
+pretzel_07s.jpg,pretzel/pretzel_07s.jpg,food,pretzel,4.3778,0.7692,309
+pasta_06s.jpg,pasta/pasta_06s.jpg,food,pasta,4.102,0.7805,310
+gyro_01b.jpg,gyro/gyro_01b.jpg,food,gyro,4.0,0.775,311
+guacamole_14s.jpg,guacamole/guacamole_14s.jpg,food,guacamole,4.381,0.7561,312
+pita_08s.jpg,pita/pita_08s.jpg,food,pita,3.8298,0.7857,313
+blueberry_07s.jpg,blueberry/blueberry_07s.jpg,food,blueberry,3.5652,0.75,314
+saffron_12s.jpg,saffron/saffron_12s.jpg,food,saffron,4.0,0.7619,315
+salami_08s.jpg,salami/salami_08s.jpg,food,salami,4.5,0.8,316
+sweet_potato_07s.jpg,sweet_potato/sweet_potato_07s.jpg,food,sweet potato,3.7843,0.7727,317
+lamb_chop_18s.jpg,lamb_chop/lamb_chop_18s.jpg,food,lamb chop,3.8958,0.8,318
+mashed_potato_05s.jpg,mashed_potato/mashed_potato_05s.jpg,food,mashed potato,3.9149,0.8,319
+chicken1_08s.jpg,chicken1/chicken1_08s.jpg,food,chicken,3.9565,0.7907,320
+spam_01b.jpg,spam/spam_01b.jpg,food,spam,4.4167,0.7568,321
+burrito_05s.jpg,burrito/burrito_05s.jpg,food,burrito,4.3191,0.7838,322
+prune_04s.jpg,prune/prune_04s.jpg,food,prune,4.1915,0.8,323
+chili_11s.jpg,chili/chili_11s.jpg,food,chili,4.0952,0.775,324
+pizza_03s.jpg,pizza/pizza_03s.jpg,food,pizza,4.5333,0.7949,325
+cornbread_01b.jpg,cornbread/cornbread_01b.jpg,food,cornbread,4.0612,0.8,326
+meatball_14s.jpg,meatball/meatball_14s.jpg,food,meatball,4.0,0.7674,327
+ravioli_15s.jpg,ravioli/ravioli_15s.jpg,food,ravioli,3.9362,0.8,328
+grapefruit_09s.jpg,grapefruit/grapefruit_09s.jpg,food,grapefruit,4.1111,0.7561,329
+bean_04s.jpg,bean/bean_04s.jpg,food,bean,4.1042,0.7895,330
+chips_03s.jpg,chips/chips_03s.jpg,food,chips,4.1163,0.7857,331
+quiche_11s.jpg,quiche/quiche_11s.jpg,food,quiche,3.9804,0.7949,332
+cantaloupe_07s.jpg,cantaloupe/cantaloupe_07s.jpg,food,cantaloupe,3.6744,0.75,333
+bun_07s.jpg,bun/bun_07s.jpg,food,bun,3.6512,0.8,334
+sushi_08s.jpg,sushi/sushi_08s.jpg,food,sushi,4.2449,0.7561,335
+steak_15s.jpg,steak/steak_15s.jpg,food,steak,4.4043,0.7805,336
+wafer_08s.jpg,wafer/wafer_08s.jpg,food,wafer,3.7442,0.7907,337
+cashew_11s.jpg,cashew/cashew_11s.jpg,food,cashew,3.86,0.7645,338
+snack_02s.jpg,snack/snack_02s.jpg,food,snack,4.6512,0.75,339
+dumpling_13s.jpg,dumpling/dumpling_13s.jpg,food,dumpling,4.1163,0.8,340
+biscuit_09s.jpg,biscuit/biscuit_09s.jpg,food,biscuit,4.2857,0.7895,341
+crouton_12s.jpg,crouton/crouton_12s.jpg,food,crouton,4.125,0.775,342
+rice_04s.jpg,rice/rice_04s.jpg,food,rice,4.1429,0.7805,343
+olive_12s.jpg,olive/olive_12s.jpg,food,olive,4.2083,0.7857,344
+tamale_13s.jpg,tamale/tamale_13s.jpg,food,tamale,3.9111,0.7674,345
+spring_roll_05s.jpg,spring_roll/spring_roll_05s.jpg,food,spring roll,3.7234,0.7692,346
+grain_05s.jpg,grain/grain_05s.jpg,food,grain,4.0488,0.75,347
+peach_09n.jpg,peach/peach_09n.jpg,food,peach,3.9111,0.7857,348
+tortilla_04s.jpg,tortilla/tortilla_04s.jpg,food,tortilla,4.0465,0.7561,349
+banana_06s.jpg,banana/banana_06s.jpg,food,banana,3.5455,0.7857,350
+cheeseburger_12s.jpg,cheeseburger/cheeseburger_12s.jpg,food,cheeseburger,3.9574,0.7561,351
+tortellini_06s.jpg,tortellini/tortellini_06s.jpg,food,tortellini,3.7609,0.7895,352
+chickpea_02s.jpg,chickpea/chickpea_02s.jpg,food,chickpea,3.5714,0.75,353
+egg_roll_07n.jpg,egg_roll/egg_roll_07n.jpg,food,egg roll,4.2381,0.7674,354
+easter_egg_12s.jpg,easter_egg/easter_egg_12s.jpg,food,easter egg,3.9767,0.775,355
+caviar_07s.jpg,caviar/caviar_07s.jpg,food,caviar,4.4318,0.8,356
+breadstick_14s.jpg,breadstick/breadstick_14s.jpg,food,breadstick,4.22,0.7561,357
+taco_01b.jpg,taco/taco_01b.jpg,food,taco,4.0714,0.75,358
+asparagus_07s.jpg,asparagus/asparagus_07s.jpg,food,asparagus,3.9535,0.7805,359
+batter_04s.jpg,batter/batter_04s.jpg,food,batter,4.0,0.7805,360
+tomato_sauce_14s.jpg,tomato_sauce/tomato_sauce_14s.jpg,food,tomato sauce,4.0889,0.7561,361
+noodle_01s.jpg,noodle/noodle_01s.jpg,food,noodle,4.1176,0.7857,362
+dough_17s.jpg,dough/dough_17s.jpg,food,dough,3.9348,0.7949,363
+hotdog_03s.jpg,hotdog/hotdog_03s.jpg,food,hotdog,4.4694,0.7805,364
+pistachio_11s.jpg,pistachio/pistachio_11s.jpg,food,pistachio,3.5217,0.75,365
+plum_08s.jpg,plum/plum_08s.jpg,food,plum,3.76,0.7692,366
+string_cheese_01b.jpg,string_cheese/string_cheese_01b.jpg,food,string cheese,4.1458,0.7561,367
+yolk_11s.jpg,yolk/yolk_11s.jpg,food,yolk,4.0227,0.7805,368
+pickle_09s.jpg,pickle/pickle_09s.jpg,food,pickle,4.0577,0.7895,369
+spareribs_10s.jpg,spareribs/spareribs_10s.jpg,food,spareribs,4.1163,0.75,370
+corn_14s.jpg,corn/corn_14s.jpg,food,corn,3.7708,0.8,371
+raisin_14s.jpg,raisin/raisin_14s.jpg,food,raisin,4.5106,0.7561,372
+pepper2_08s.jpg,pepper2/pepper2_08s.jpg,food,pepper,4.4898,0.7805,373
+macaroni_11s.jpg,macaroni/macaroni_11s.jpg,food,macaroni,4.2857,0.7949,374
+patty_09s.jpg,patty/patty_09s.jpg,food,patty,4.0833,0.7857,375
+wrap_09s.jpg,wrap/wrap_09s.jpg,food,wrap,3.7907,0.775,376
+spaghetti_07s.jpg,spaghetti/spaghetti_07s.jpg,food,spaghetti,4.1702,0.8,377
+ready_meal_11s.jpg,ready_meal/ready_meal_11s.jpg,food,ready meal,4.0488,0.7949,378
+iceskate_07s.jpg,iceskate/iceskate_07s.jpg,footwear,iceskate,4.32,0.775,379
+rollerskate_12s.jpg,rollerskate/rollerskate_12s.jpg,footwear,rollerskate,4.4773,0.7895,380
+flipper_12s.jpg,flipper/flipper_12s.jpg,footwear,flipper,3.7917,0.7895,381
+bench_16n.jpg,bench/bench_16n.jpg,furniture,bench,3.7021,0.8,382
+step_stool_06s.jpg,step_stool/step_stool_06s.jpg,furniture,step stool,3.6522,0.775,383
+bunkbed_06s.jpg,bunkbed/bunkbed_06s.jpg,furniture,bunkbed,3.7447,0.7805,384
+sofa_bed_13s.jpg,sofa_bed/sofa_bed_13s.jpg,furniture,sofa bed,3.7381,0.8,385
+footrest_01b.jpg,footrest/footrest_01b.jpg,furniture,footrest,4.2826,0.7857,386
+beanbag_13s.jpg,beanbag/beanbag_13s.jpg,furniture,beanbag,3.7708,0.7692,387
+air_mattress_13s.jpg,air_mattress/air_mattress_13s.jpg,furniture,air mattress,4.1633,0.7805,388
+throne_02s.jpg,throne/throne_02s.jpg,furniture,throne,4.75,0.775,389
+jigsaw_puzzle_09s.jpg,jigsaw_puzzle/jigsaw_puzzle_09s.jpg,game,jigsaw puzzle,3.5652,0.7805,391
+playing_card_12s.jpg,playing_card/playing_card_12s.jpg,game,playing card,3.8824,0.8,392
+domino_02s.jpg,domino/domino_02s.jpg,game,domino,3.75,0.7561,393
+ticktacktoe_09s.jpg,ticktacktoe/ticktacktoe_09s.jpg,game,ticktacktoe,4.5,0.7908,394
+checkers_06s.jpg,checkers/checkers_06s.jpg,game,checkers,4.186,0.7949,395
+yo-yo_12s.jpg,yo-yo/yo-yo_12s.jpg,game,yo-yo,3.8261,0.7895,397
+dice_14s.jpg,dice/dice_14s.jpg,game,dice,3.8367,0.7949,398
+shears_03s.jpg,shears/shears_03s.jpg,garden tool,shears,4.5849,0.7692,399
+clipper1_01s.jpg,clipper1/clipper1_01s.jpg,garden tool,clipper,4.5098,0.7632,400
+doorknocker_08s.jpg,doorknocker/doorknocker_08s.jpg,hardware,doorknocker,4.2439,0.7949,401
+bracket_05s.jpg,bracket/bracket_05s.jpg,hardware,bracket,3.7,0.7805,402
+faucet_09s.jpg,faucet/faucet_09s.jpg,hardware,faucet,3.7551,0.7949,404
+light_switch_17s.jpg,light_switch/light_switch_17s.jpg,hardware,light switch,4.0,0.7692,405
+hinge_04s.jpg,hinge/hinge_04s.jpg,hardware,hinge,4.2083,0.7949,406
+hairnet_07s.jpg,hairnet/hairnet_07s.jpg,headwear,hairnet,4.093,0.8,407
+hood_06s.jpg,hood/hood_06s.jpg,headwear,hood,4.3913,0.8,408
+football_helmet_05s.jpg,football_helmet/football_helmet_05s.jpg,headwear,football helmet,3.9778,0.775,409
+wig_01s.jpg,wig/wig_01s.jpg,headwear,wig,3.9,0.75,410
+scarecrow_09s.jpg,scarecrow/scarecrow_09s.jpg,home decor,scarecrow,4.2857,0.8,411
+figurine_11s.jpg,figurine/figurine_11s.jpg,home decor,figurine,3.8,0.7857,412
+coaster_08s.jpg,coaster/coaster_08s.jpg,home decor,coaster,3.9167,0.8,413
+juicer1_09s.jpg,juicer1/juicer1_09s.jpg,kitchen tool,juicer,3.9149,0.7561,414
+skewer_09s.jpg,skewer/skewer_09s.jpg,kitchen tool,skewer,3.9024,0.8,415
+whisk_04s.jpg,whisk/whisk_04s.jpg,kitchen tool,whisk,4.1282,0.775,416
+scoop_12s.jpg,scoop/scoop_12s.jpg,kitchen tool,scoop,4.25,0.7805,417
+grater_03s.jpg,grater/grater_03s.jpg,kitchen tool,grater,4.1957,0.8,418
+nutcracker_06s.jpg,nutcracker/nutcracker_06s.jpg,kitchen tool,nutcracker,4.3488,0.7949,419
+match_07s.jpg,match/match_07s.jpg,lighting,match,4.1702,0.8,420
+lighter_08s.jpg,lighter/lighter_08s.jpg,lighting,lighter,4.4773,0.7561,421
+bandage_01b.jpg,bandage/bandage_01b.jpg,medical equipment,bandage,4.2791,0.7619,422
+walker1_03s.jpg,walker1/walker1_03s.jpg,medical equipment,walker,4.3878,0.7895,423
+crutch_11s.jpg,crutch/crutch_11s.jpg,medical equipment,crutch,4.2245,0.7895,424
+ice_pack_10s.jpg,ice_pack/ice_pack_10s.jpg,medical equipment,ice pack,4.0943,0.7561,425
+gauze_02s.jpg,gauze/gauze_02s.jpg,medical equipment,gauze,3.7391,0.7632,426
+swab_02s.jpg,swab/swab_02s.jpg,medical equipment,swab,3.5714,0.7838,427
+plaster_cast_13s.jpg,plaster_cast/plaster_cast_13s.jpg,medical equipment,plaster cast,4.6458,0.775,428
+inhaler_12s.jpg,inhaler/inhaler_12s.jpg,medical equipment,inhaler,4.1064,0.7857,429
+saxophone_07s.jpg,saxophone/saxophone_07s.jpg,musical instrument,saxophone,3.7917,0.7805,430
+ukulele_14s.jpg,ukulele/ukulele_14s.jpg,musical instrument,ukulele,3.7,0.75,431
+harp_05s.jpg,harp/harp_05s.jpg,musical instrument,harp,3.7556,0.775,432
+french_horn_05s.jpg,french_horn/french_horn_05s.jpg,musical instrument,french horn,4.34,0.7619,433
+trombone_14s.jpg,trombone/trombone_14s.jpg,musical instrument,trombone,4.0926,0.7949,434
+kazoo_08s.jpg,kazoo/kazoo_08s.jpg,musical instrument,kazoo,3.9565,0.8,435
+keyboard_15s.jpg,keyboard/keyboard_15s.jpg,musical instrument,keyboard,4.1277,0.775,436
+punch2_01b.jpg,punch2/punch2_01b.jpg,office supply,punch,4.3469,0.75,437
+highlighter_05s.jpg,highlighter/highlighter_05s.jpg,office supply,highlighter,3.6364,0.8,438
+handbrake_03s.jpg,handbrake/handbrake_03s.jpg,part of car,handbrake,4.413,0.7895,439
+headrest_10s.jpg,headrest/headrest_10s.jpg,part of car,headrest,3.64,0.8,440
+gearshift_11n.jpg,gearshift/gearshift_11n.jpg,part of car,gearshift,3.8776,0.7907,441
+toothpaste_10s.jpg,toothpaste/toothpaste_10s.jpg,personal hygiene item,toothpaste,3.9302,0.775,443
+razor_09s.jpg,razor/razor_09s.jpg,personal hygiene item,razor,4.4118,0.8,444
+nail_polish_03s.jpg,nail_polish/nail_polish_03s.jpg,personal hygiene item,nail polish,4.1818,0.75,445
+nail_clippers_05s.jpg,nail_clippers/nail_clippers_05s.jpg,personal hygiene item,nail clippers,4.7778,0.7805,446
+soap_06s.jpg,soap/soap_06s.jpg,personal hygiene item,soap,3.8649,0.75,447
+shaving_cream_05s.jpg,shaving_cream/shaving_cream_05s.jpg,personal hygiene item,shaving cream,3.8958,0.775,448
+toilet_paper_07s.jpg,toilet_paper/toilet_paper_07s.jpg,personal hygiene item,toilet paper,3.7045,0.7692,449
+lip_balm_08s.jpg,lip_balm/lip_balm_08s.jpg,personal hygiene item,lip balm,3.9783,0.7857,450
+hairbrush_08s.jpg,hairbrush/hairbrush_08s.jpg,personal hygiene item,hairbrush,4.0408,0.8,451
+shower_cap_12s.jpg,shower_cap/shower_cap_12s.jpg,personal hygiene item,shower cap,3.9556,0.7619,452
+nail_file_05s.jpg,nail_file/nail_file_05s.jpg,personal hygiene item,nail file,4.2041,0.7949,453
+clipper2_05s.jpg,clipper2/clipper2_05s.jpg,personal hygiene item,clipper,4.2653,0.7805,454
+lipstick_12s.jpg,lipstick/lipstick_12s.jpg,personal hygiene item,lipstick,4.2549,0.75,455
+eyeliner_10s.jpg,eyeliner/eyeliner_10s.jpg,personal hygiene item,eyeliner,3.9762,0.7857,456
+toothpick_14n.jpg,toothpick/toothpick_14n.jpg,personal hygiene item,toothpick,3.8222,0.7907,457
+toothbrush_12s.jpg,toothbrush/toothbrush_12s.jpg,personal hygiene item,toothbrush,3.6538,0.8,458
+mouthpiece_01s.jpg,mouthpiece/mouthpiece_01s.jpg,safety equipment,mouthpiece,4.2955,0.7805,459
+harness_03s.jpg,harness/harness_03s.jpg,safety equipment,harness,4.4884,0.775,460
+gas_mask_01b.jpg,gas_mask/gas_mask_01b.jpg,safety equipment,gas mask,4.2791,0.7561,461
+earplug_01b.jpg,earplug/earplug_01b.jpg,safety equipment,earplug,4.0784,0.7895,462
+magnet_12s.jpg,magnet/magnet_12s.jpg,scientific equipment,magnet,4.0,0.7561,463
+microscope_14n.jpg,microscope/microscope_14n.jpg,scientific equipment,microscope,4.0784,0.7805,464
+seismograph_06s.jpg,seismograph/seismograph_06s.jpg,scientific equipment,seismograph,4.5385,0.775,465
+scale_05s.jpg,scale/scale_05s.jpg,scientific equipment,scale,4.098,0.8,466
+javelin_01s.jpg,javelin/javelin_01s.jpg,sports equipment,javelin,4.5333,0.7907,468
+exerciser_05s.jpg,exerciser/exerciser_05s.jpg,sports equipment,exerciser,4.2727,0.7805,469
+trampoline_01b.jpg,trampoline/trampoline_01b.jpg,sports equipment,trampoline,4.4314,0.7619,470
+goggles_07s.jpg,goggles/goggles_07s.jpg,sports equipment,goggles,3.9796,0.7805,471
+dumbbell_10s.jpg,dumbbell/dumbbell_10s.jpg,sports equipment,dumbbell,4.06,0.7692,472
+bowling_ball_01b.jpg,bowling_ball/bowling_ball_01b.jpg,sports equipment,bowling ball,4.0889,0.8,473
+tee_01b.jpg,tee/tee_01b.jpg,sports equipment,tee,3.7083,0.7857,474
+football_04s.jpg,football/football_04s.jpg,sports equipment,football,3.9592,0.7949,475
+punching_bag_09s.jpg,punching_bag/punching_bag_09s.jpg,sports equipment,punching bag,3.898,0.75,476
+baseball_01b.jpg,baseball/baseball_01b.jpg,sports equipment,baseball,4.0588,0.7692,477
+snorkel_05s.jpg,snorkel/snorkel_05s.jpg,sports equipment,snorkel,4.1277,0.775,478
+target_14s.jpg,target/target_14s.jpg,sports equipment,target,4.0426,0.75,479
+boxing_gloves_05s.jpg,boxing_gloves/boxing_gloves_05s.jpg,sports equipment,boxing gloves,4.62,0.7907,480
+frisbee_04s.jpg,frisbee/frisbee_04s.jpg,sports equipment,frisbee,4.0233,0.775,481
+squeegee_10s.jpg,squeegee/squeegee_10s.jpg,tool,squeegee,3.9796,0.7561,483
+backscratcher_12s.jpg,backscratcher/backscratcher_12s.jpg,tool,backscratcher,3.6863,0.7895,484
+chopsticks_04s.jpg,chopsticks/chopsticks_04s.jpg,tool,chopsticks,4.1569,0.7949,485
+gavel_02s.jpg,gavel/gavel_02s.jpg,tool,gavel,4.0816,0.7632,486
+mop_01b.jpg,mop/mop_01b.jpg,tool,mop,4.087,0.8,487
+duster_07s.jpg,duster/duster_07s.jpg,tool,duster,3.7925,0.7561,488
+sweeper_02s.jpg,sweeper/sweeper_02s.jpg,tool,sweeper,4.475,0.7857,489
+broom_10s.jpg,broom/broom_10s.jpg,tool,broom,4.1458,0.7857,490
+brush_04s.jpg,brush/brush_04s.jpg,tool,brush,3.6809,0.7805,491
+robot_14s.jpg,robot/robot_14s.jpg,toy,robot,4.4524,0.7692,492
+rattle_08s.jpg,rattle/rattle_08s.jpg,toy,rattle,4.551,0.7561,493
+hula_hoop_16s.jpg,hula_hoop/hula_hoop_16s.jpg,toy,hula hoop,3.8085,0.7561,494
+hobbyhorse_04s.jpg,hobbyhorse/hobbyhorse_04s.jpg,toy,hobbyhorse,3.7292,0.7907,495
+dollhouse_12s.jpg,dollhouse/dollhouse_12s.jpg,toy,dollhouse,4.02,0.7857,496
+lego_12s.jpg,lego/lego_12s.jpg,toy,lego,4.125,0.8,497
+dreidel_13s.jpg,dreidel/dreidel_13s.jpg,toy,dreidel,3.8333,0.7895,498
+noisemaker_05s.jpg,noisemaker/noisemaker_05s.jpg,toy,noisemaker,3.7872,0.7727,500
+squirt_gun_15s.jpg,squirt_gun/squirt_gun_15s.jpg,toy,squirt gun,4.6939,0.8,501
+hearse_06s.jpg,hearse/hearse_06s.jpg,vehicle,hearse,4.093,0.8,503
+limousine_10s.jpg,limousine/limousine_10s.jpg,vehicle,limousine,3.9565,0.7857,504
+subway_13s.jpg,subway/subway_13s.jpg,vehicle,subway,3.907,0.7619,505
+canoe_08s.jpg,canoe/canoe_08s.jpg,vehicle,canoe,3.8269,0.7692,506
+unicycle_03s.jpg,unicycle/unicycle_03s.jpg,vehicle,unicycle,4.14,0.7692,507

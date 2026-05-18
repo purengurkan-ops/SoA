@@ -20,7 +20,7 @@ import pingouin as pg #the package that allows you to perform statistical analys
 # Import data
 #-------------------------
 
-DATA_DIR = Path(r"pilot_data")
+DATA_DIR = Path(r"/Users/purengurkan/Desktop/SoA/SoA/CDmem/data/subjects")
 
 # same goes for the output directory. I have just created a new empty folder called analysis_output in our repo. set that as OUTPUT_DIR below
 
@@ -29,7 +29,7 @@ OUTPUT_DIR = Path("analysis_output")
 # Participant filter: set to a non-empty list to restrict analyses to specific
 # participant IDs, e.g. PARTICIPANT_FILTER = [2, 3].
 # Leave as an empty list [] to include ALL participants found in data files.
-PARTICIPANT_FILTER = []
+PARTICIPANT_FILTER = [12,14,14,15,16,17]
 
 #-------------------------
 # Load data
@@ -216,6 +216,9 @@ clean_recog_data["controlled"] = clean_recog_data["controlled"].astype(str).str.
 
 # Function to compute d-prime with loglinear correction
 
+print("\n--- DEBUGGING ---")
+print("Actual words in mem_response:", clean_recog_data["mem_response"].unique())
+
 def compute_d_prime(hits, misses, false_alarms, correct_rejections):
     hit_rate = (hits + 0.5) / (hits + misses + 1)
     fa_rate = (false_alarms + 0.5) / (false_alarms + correct_rejections + 1)
@@ -228,7 +231,7 @@ false_alarm_stats = (
     .value_counts()
     .unstack(fill_value=0)
     # Changed "yes"/"no" to "old"/"new" to match your data!
-    .rename(columns={"old": "false_alarms", "new": "correct_rejections"})
+    .rename(columns={"yes": "false_alarms", "no": "correct_rejections"})
     .reset_index()
 )
 
@@ -250,8 +253,8 @@ for participant, subject_data in clean_recog_data.groupby("participant"):
             continue
         
         # Changed "yes"/"no" to "old"/"new" here as well
-        hits = (condition_data["mem_response"] == "old").sum()
-        misses = (condition_data["mem_response"] == "new").sum()
+        hits = (condition_data["mem_response"] == "yes").sum()
+        misses = (condition_data["mem_response"] == "no").sum()
         
         d_prime = compute_d_prime(hits, misses, false_alarms, correct_rejections)
         rows.append({
@@ -387,6 +390,43 @@ model_data_pl = pl.DataFrame(model_data)
 
 # Print a quick check to verify our final dataset is ready!
 print("\n--- STEP 4 COMPLETE ---")
-print(f"Final modeling dataset created with {len(model_data_pl)} rows.")
+print("Final modeling dataset created with {len(model_data_pl)} rows.")
 print("First 5 rows of contrast codes:")
 print(model_data[['mem_ground_truth', 'item_type_c', 'control_condition', 'control_c']].head())
+
+# =============================================================================
+# STEP 5: Fit the Generalized Linear Mixed Model (GLMM) - Analysis 4
+# =============================================================================
+from pymer4.models import glmer 
+
+# 1. Fix the Dependent Variable for ALL data
+model_data['said_old_int'] = model_data['mem_response'].str.lower().map({'yes': 1, 'no': 0})
+
+# Update our polars dataframe
+model_data_pl = pl.DataFrame(model_data)
+
+# 2. Define the Formulas
+maximal_formula = "said_old_int ~ item_type_c * control_c + (1 + item_type_c * control_c | participant)"
+fallback_formula = "said_old_int ~ item_type_c * control_c + (1 | participant)"
+
+# 3. Fit Maximal Model
+print("\n" + "="*40)
+print("FITTING MAXIMAL GLMM MODEL")
+print("="*40)
+model_max = glmer(maximal_formula, data=model_data_pl, family="binomial")
+model_max.fit()
+
+print("\n--- MAXIMAL MODEL RESULTS ---")
+print(model_max.result_fit)
+
+
+# 4. Fit Fallback Model
+print("\n" + "="*40)
+print("FITTING GLMM MODEL")
+print("="*40)
+
+model_fallback = glmer(fallback_formula, data=model_data_pl, family="binomial")
+model_fallback.fit()
+
+print("\n--- FALLBACK MODEL RESULTS ---")
+print(model_fallback.result_fit)
