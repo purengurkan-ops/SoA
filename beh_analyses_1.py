@@ -430,3 +430,36 @@ model_fallback.fit()
 
 print("\n--- FALLBACK MODEL RESULTS ---")
 print(model_fallback.result_fit)
+
+# =============================================================================
+# STEP 6: Reaction Time (RT) Analysis (Analysis B — Gaussian LMM)
+# =============================================================================
+from pymer4.models import lmer
+
+print("\n" + "="*40)
+print("PREPARING REACTION TIME DATA")
+print("="*40)
+
+# 1. Log-transform the reaction times
+# We use np.log() to calculate the natural logarithm for the valid reaction times.
+# We are applying this to 'model_data' which already has the +/- 3SD bounds applied.
+model_data['log_mem_rt'] = np.log(model_data['mem_rt'])
+
+# 2. Convert the entire pandas dataframe into a polars dataframe for pymer4
+# We use all items with valid RTs, bypassing the 'correct trials only' filter.
+rt_data_pl = pl.DataFrame(model_data)
+
+# 3. Define the Gaussian LMM Formula matching your specification
+rt_formula = "log_mem_rt ~ item_type_c * control_c + (1 | participant)"
+
+# 4. Fit the Gaussian Linear Mixed Model
+print("\n" + "="*40)
+print("FITTING GAUSSIAN LMM MODEL (LOG RT, ALL VALID TRIALS)")
+print("="*40)
+
+# The default family in Lmer is Gaussian, fitting your model perfectly
+rt_model = lmer(rt_formula, data=rt_data_pl)
+rt_model.fit()
+
+print("\n--- REACTION TIME MODEL RESULTS ---")
+print(rt_model.result_fit)
