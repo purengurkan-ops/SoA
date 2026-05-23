@@ -125,9 +125,84 @@ else:
 # 6. Remove these participants from our main 'data' dataframe
 # similar to how we filtered stuff in the first step, but this time we use the '~' symbol
 # The '~' symbol means "NOT" (keep data where participant is NOT in the list)
-# don't forget to use .copy() again
 
 data = data[~data["participant"].isin(listofexcludedparticipants)].copy()
+
+# ============================================================================
+# EXCLUSION CRITERION 2 - DETECTION ACCURACY 2.5 SD OUTLIERS
+# ============================================================================
+print("\nEXCLUSION CRITERION 2: Detection Accuracy Outliers")
+
+# 1. Calculate overall detection accuracy for each participant
+# We will use the 'test' phase data, assuming that is where accuracy matters most.
+test_data = data[data["phase"] == "test"].copy()
+pt_accuracy = test_data.groupby("participant")["detection_accuracy"].mean().reset_index()
+
+# 2. Calculate the group mean and standard deviation
+group_mean_acc = pt_accuracy["detection_accuracy"].mean()
+group_sd_acc = pt_accuracy["detection_accuracy"].std()
+
+# 3. Define the upper and lower boundaries (2.5 SD)
+lower_bound_acc = group_mean_acc - (2.5 * group_sd_acc)
+upper_bound_acc = group_mean_acc + (2.5 * group_sd_acc)
+
+# 4. Identify participants strictly outside these boundaries
+failed_acc_rows = pt_accuracy[
+    (pt_accuracy["detection_accuracy"] < lower_bound_acc) | 
+    (pt_accuracy["detection_accuracy"] > upper_bound_acc)
+]
+excluded_acc_pts = failed_acc_rows["participant"].tolist()
+
+# 5. Report and remove 
+if len(excluded_acc_pts) > 0:
+    print(f"  -> Excluded {len(excluded_acc_pts)} participants (>2.5 SD from mean): {excluded_acc_pts}")
+else:
+    print("  -> No participants were excluded.")
+
+data = data[~data["participant"].isin(excluded_acc_pts)].copy()
+
+
+## ============================================================================
+# EXCLUSION CRITERION 3 - CALIBRATION FAILURE
+# ============================================================================
+print("\nEXCLUSION CRITERION 3: Calibration Failure")
+
+# 1. Isolate the calibration data
+calib_data = data[data["phase"] == "calibration"].copy()
+
+# 2. Ensure convergence columns are read as booleans (True/False) and not strings
+calib_data["quest_low_converged"] = calib_data["quest_low_converged"].astype(str).str.strip().str.lower() == "true"
+calib_data["quest_high_converged"] = calib_data["quest_high_converged"].astype(str).str.strip().str.lower() == "true"
+
+# 3. Check if each staircase converged (True if at least one row says True)
+conv_low = calib_data.groupby("participant")["quest_low_converged"].any()
+conv_high = calib_data.groupby("participant")["quest_high_converged"].any()
+
+# 4. Combine the two checks into a single dataframe
+convergence_check = pd.DataFrame({
+    "low_converged": conv_low,
+    "high_converged": conv_high
+}).reset_index()
+
+# 5. Find participants where BOTH staircases failed to converge
+failed_calib_rows = convergence_check[
+    (convergence_check["low_converged"] == False) & 
+    (convergence_check["high_converged"] == False)
+]
+excluded_calib_pts = failed_calib_rows["participant"].tolist()
+
+# 6. Report and remove
+if len(excluded_calib_pts) > 0:
+    print(f"  -> Excluded {len(excluded_calib_pts)} participants for calibration failure: {excluded_calib_pts}")
+else:
+    print("  -> No participants were excluded.")
+
+data = data[~data["participant"].isin(excluded_calib_pts)].copy()
+
+# ============================================================================
+# FINAL CLEANUP BEFORE MANIPULATION CHECKS
+# ============================================================================
+print(f"\nTotal participants remaining for analysis: {data['participant'].nunique()}")
 
 # =============================================================================
 # MANIPULATION CHECK: Control Detection & SoA Ratings
