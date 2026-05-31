@@ -1,540 +1,327 @@
-#-------------------------
-# This file includes pseudocode / guidelines for the behavioral analyses of the control detection & memory project
-# --------------------
+# =============================================================================
+# BEHAVIORAL ANALYSES: CONTROL DETECTION & MEMORY
+# =============================================================================
 
-# The packages you need 
-import os #the package that allows python to read files from local folders
-import numpy as np #the package that allows you to perform numerical operations
-import pandas as pd #the package that allows you to work with dataframes
-import matplotlib.pyplot as plt #the package that allows you to create plots
-import seaborn as sns #the package that allows you to create more advanced plots
-from pathlib import Path #the package that allows you to work with file paths in a more flexible way
-from scipy.stats import norm #the package that allows you to perform statistical analyses (e.g., t-tests, ANOVAs, etc.)
+# --- Packages ---
+#packages for file handling
+import os
+#packages for numerical operations
+import numpy as np
+#packages for data manipulation
+import pandas as pd
+#packages for stats and modeling
+import matplotlib.pyplot as plt
+#packages for stats and modeling
+import seaborn as sns
+#packages for stats and modeling
+from pathlib import Path
+#packages for stats and modeling
+from scipy.stats import norm
 import polars as pl
-from pymer4.models import glmer
+from pymer4.models import glmer, lmer
+import pingouin as pg
 
-import pingouin as pg #the package that allows you to perform statistical analyses (e.g., t-tests, ANOVAs, etc.)
+# =============================================================================
+# PHASE 1: LOAD ALL DATA
+# =============================================================================
+print("\n" + "="*40)
+print("PHASE 1: LOADING DATA")
+print("="*40)
 
-
-#-------------------------
-# Import data
-#-------------------------
-
+# Define paths and participant filter
 DATA_DIR = Path(r"/Users/purengurkan/Desktop/SoA/SoA/CDmem/data/subjects")
-
-# same goes for the output directory. I have just created a new empty folder called analysis_output in our repo. set that as OUTPUT_DIR below
-
+#define output directory for results and plots
 OUTPUT_DIR = Path("analysis_output")
+#create output directory if it doesn't exist
+OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+#filter to include only specific participants (if empty, includes all)
+PARTICIPANT_FILTER = [12, 14, 15, 16, 17] # Note: Removed duplicate '14' from your list
 
-# Participant filter: set to a non-empty list to restrict analyses to specific
-# participant IDs, e.g. PARTICIPANT_FILTER = [2, 3].
-# Leave as an empty list [] to include ALL participants found in data files.
-PARTICIPANT_FILTER = [12,14,14,15,16,17]
-
-#-------------------------
-# Load data
-#-------------------------
-
-# 1. Find all data files matching the specific naming pattern. 
-# DATA_DIR.glob tells Python to look inside DATA_DIR and fetch files ending with .csv
-# CDmem_1_* is the naming pattern for data coming from the control detection task NOT recognition. 
+# 1A. Load Main Task Data
 all_files = list(DATA_DIR.glob("CDmem_1_*.csv"))
-
-# 2. Create an empty list to store the dataframes for each participant
-# a list is the same structure as the participant filter above :)
-
 df_list = []
-
-# 3. Loop through each file path that we found
-# a for loop does whatever is indented below it, for each item in the list
-# so this one will do the indented actions for everything in all_files
 for file_path in all_files:
-    
-    # Read the CSV file into a pandas DataFrame
-    # a pandas dataframe is basically a table with rows and columns
-    # you need to give it a name, usually df
-    df = pd.read_csv(file_path)
-    
-    # Add this DataFrame to the empty list you created.
-    # you do this via writing the name of the empty list and then .append(df), single line of code
-    # .append() is a "method" that adds the item in parantheses to the end of the list
-    
-    df_list.append(df)
-
-
-# up to this point, we have loaded all the data in the data folder.
-# 4.  now we need to filter participants if you set numbers in PARTICIPANT_FILTER list above
-
+    df_list.append(pd.read_csv(file_path))
+# Apply participant filter if specified (checks the first row's participant ID in each file)
 if PARTICIPANT_FILTER: 
-    # Use list comprehension to keep only data for included participants
-    # change "thelistyoucreated" to whatever name you gave your list above
     df_list = [df for df in df_list if df["participant"].iloc[0] in PARTICIPANT_FILTER]
 
-# 5. recall that we have everything in a list. but for stats, we need everything in a dataframe (i.e., rows, columns, etc. so we can use column names etc later)
-# we do this with pd.concat()
-# pd.concat() is a function that takes a list of dataframes and concatenates them into a single dataframe
-# ignore_index = True means that we want to create a new index for the combined dataframe
-
-# change "thelistyoucreated" to whatever name you gave your list above
-if df_list: # This checks if the list is not empty
+if df_list:
     data = pd.concat(df_list, ignore_index=True)
-    print(f"Successfully loaded {len(df_list)} data files! Total rows: {len(data)}")
-    # len() gives the length of a list. len(thelistyoucreated) gives the number of lists in the listyoucreated. recall that thelistyoucreated was created to store all data from the folder.
-    # similarly, len(data) gives the number of rows in the dataframe.
+    print(f"Main data loaded! Total rows: {len(data)}")
 else:
-    print("Warning: No data files found. Please check your DATA_DIR folder.") 
+    raise ValueError("Warning: No main data files found.")
 
-# ============================================================================
-# EXCLUSION CRITERION 1 - TIMEOUT RATE
-# ============================================================================
-# We want to exclude participants who have 50% or more timeout trials 
-# in either the 'low' or 'high' control condition during the 'test' phase.
-# set a threshold for the timeout rate. basically a variable that equals 0.50
-
-TIMEOUT_THRESHOLD = 0.50
-
-# 1. Filter the data to only include the "test" phase 
-# the .copy one creates a copy so that the original doesnt get modified
-test_data = data[data["phase"] == "test"].copy()
-
-# 2. Make sure the "is_timeout" column contains only True or False
-# Sometimes it loads as text like "True" or "False", so we force it to be a boolean
-# so it does not take it as the word "true" but the logical true
-test_data["is_timeout"] = test_data["is_timeout"].astype(str).str.strip().str.lower() == "true"
-
-# 3. Calculate the timeout rate per participant per condition. 
-# We can do this by taking the mean of the "is_timeout" column (since True is 1 and False is 0)
-
-# timeout_rate = ........
-timeout_rate = test_data.groupby(["participant", "control_condition"])["is_timeout"].mean().reset_index()
-
-# 4. Find the rows where the timeout rate is greater than or equal to our threshold
-
-failed_rows = timeout_rate[timeout_rate["is_timeout"] >= TIMEOUT_THRESHOLD]
-
-# 5. Get a simple list of their unique participant IDs
-listofexcludedparticipants = failed_rows["participant"].unique().tolist()
-
-print("\nEXCLUSION CRITERION 1: Timeout Rate")
-# change "listofexcludedparticipants" to whatever you named that list at step 5
-if len(listofexcludedparticipants) > 0:
-    print(f"  -> Excluded {len(listofexcludedparticipants)} participants: {listofexcludedparticipants}")
-else:
-    print("  -> No participants were excluded.")
-
-# 6. Remove these participants from our main 'data' dataframe
-# similar to how we filtered stuff in the first step, but this time we use the '~' symbol
-# The '~' symbol means "NOT" (keep data where participant is NOT in the list)
-
-data = data[~data["participant"].isin(listofexcludedparticipants)].copy()
-
-# ============================================================================
-# EXCLUSION CRITERION 2 - DETECTION ACCURACY 2.5 SD OUTLIERS
-# ============================================================================
-print("\nEXCLUSION CRITERION 2: Detection Accuracy Outliers")
-
-# 1. Calculate overall detection accuracy for each participant
-# We will use the 'test' phase data, assuming that is where accuracy matters most.
-test_data = data[data["phase"] == "test"].copy()
-pt_accuracy = test_data.groupby("participant")["detection_accuracy"].mean().reset_index()
-
-# 2. Calculate the group mean and standard deviation
-group_mean_acc = pt_accuracy["detection_accuracy"].mean()
-group_sd_acc = pt_accuracy["detection_accuracy"].std()
-
-# 3. Define the upper and lower boundaries (2.5 SD)
-lower_bound_acc = group_mean_acc - (2.5 * group_sd_acc)
-upper_bound_acc = group_mean_acc + (2.5 * group_sd_acc)
-
-# 4. Identify participants strictly outside these boundaries
-failed_acc_rows = pt_accuracy[
-    (pt_accuracy["detection_accuracy"] < lower_bound_acc) | 
-    (pt_accuracy["detection_accuracy"] > upper_bound_acc)
-]
-excluded_acc_pts = failed_acc_rows["participant"].tolist()
-
-# 5. Report and remove 
-if len(excluded_acc_pts) > 0:
-    print(f"  -> Excluded {len(excluded_acc_pts)} participants (>2.5 SD from mean): {excluded_acc_pts}")
-else:
-    print("  -> No participants were excluded.")
-
-data = data[~data["participant"].isin(excluded_acc_pts)].copy()
-
-
-## ============================================================================
-# EXCLUSION CRITERION 3 - CALIBRATION FAILURE
-# ============================================================================
-print("\nEXCLUSION CRITERION 3: Calibration Failure")
-
-# 1. Isolate the calibration data
-calib_data = data[data["phase"] == "calibration"].copy()
-
-# 2. Ensure convergence columns are read as booleans (True/False) and not strings
-calib_data["quest_low_converged"] = calib_data["quest_low_converged"].astype(str).str.strip().str.lower() == "true"
-calib_data["quest_high_converged"] = calib_data["quest_high_converged"].astype(str).str.strip().str.lower() == "true"
-
-# 3. Check if each staircase converged (True if at least one row says True)
-conv_low = calib_data.groupby("participant")["quest_low_converged"].any()
-conv_high = calib_data.groupby("participant")["quest_high_converged"].any()
-
-# 4. Combine the two checks into a single dataframe
-convergence_check = pd.DataFrame({
-    "low_converged": conv_low,
-    "high_converged": conv_high
-}).reset_index()
-
-# 5. Find participants where BOTH staircases failed to converge
-failed_calib_rows = convergence_check[
-    (convergence_check["low_converged"] == False) & 
-    (convergence_check["high_converged"] == False)
-]
-excluded_calib_pts = failed_calib_rows["participant"].tolist()
-
-# 6. Report and remove
-if len(excluded_calib_pts) > 0:
-    print(f"  -> Excluded {len(excluded_calib_pts)} participants for calibration failure: {excluded_calib_pts}")
-else:
-    print("  -> No participants were excluded.")
-
-data = data[~data["participant"].isin(excluded_calib_pts)].copy()
-
-# ============================================================================
-# FINAL CLEANUP BEFORE MANIPULATION CHECKS
-# ============================================================================
-print(f"\nTotal participants remaining for analysis: {data['participant'].nunique()}")
-
-# =============================================================================
-# MANIPULATION CHECK: Control Detection & SoA Ratings
-# =============================================================================
-
-# 1. Calculate the mean accuracy and SoA rating for EACH participant per condition
-pt_means = data.groupby(['participant', 'control_condition'])[['detection_accuracy', 'agency_rating']].mean().reset_index()
-
-# 2. Calculate the "Grand Mean" across all participants for each condition
-manipulation_summary = pt_means.groupby('control_condition')[['detection_accuracy', 'agency_rating']].mean().reset_index()
-
-# 3. Convert accuracy from a decimal (e.g., 0.85) to a percentage (85.0)
-manipulation_summary['detection_accuracy'] = manipulation_summary['detection_accuracy'] * 100
-
-# 4. Print the results cleanly!
-print("\n" + "="*40)
-print("MANIPULATION CHECK SUMMARY")
-print("="*40)
-print("Are Accuracy and SoA higher in the 'high' condition?")
-print("-" * 40)
-print(manipulation_summary.round(2).to_string(index=False)) 
-print("="*40 + "\n")
-
-#-----------------------------------
-# NOW TRY TO LOAD AND FILTER THE RECOGNITION DATA
-# file naming convention is: CDmem_*_recognition.csv
-# recall that the exclusion criteria for recognition data is trial based:
-# following Ren et al., 2026, any trial that has a RT of +- 3SD of the **participant mean** should be excluded
-
-# 1. load the data (similar to how we loaded the main data, but with a different naming pattern)
+# 1B. Load Recognition Data
 recog_files = list(DATA_DIR.glob("CDmem_*_recognition.csv"))
 recog_list = []
-
 for file_path in recog_files:
-    df = pd.read_csv(file_path)
-    recog_list.append(df)
+    recog_list.append(pd.read_csv(file_path))
 
 if recog_list:
     recog_data = pd.concat(recog_list, ignore_index=True)
-    print(f"\nSuccessfully loaded {len(recog_list)} recognition files! Total rows: {len(recog_data)}")
+    print(f"Recognition data loaded! Total rows: {len(recog_data)}")
 else:
-    print("\nWarning: No recognition data files found.")
+    raise ValueError("Warning: No recognition data files found.")
 
-# calculate mean and SD of RT for each participant
+
+# =============================================================================
+# PHASE 2: DATA CLEANING & EXCLUSIONS
+# =============================================================================
+print("\n" + "="*40)
+print("PHASE 2: EXCLUSION CRITERIA")
+print("="*40)
+
+# --- Excl 1: Timeout Rate (Main Data) ---
+TIMEOUT_THRESHOLD = 0.50
+# We assume 'is_timeout' is a column in the test phase data that indicates whether each trial was a timeout (True/False or 1/0).
+test_data = data[data["phase"] == "test"].copy()
+# Ensure 'is_timeout' is boolean (if it's not already)
+test_data["is_timeout"] = test_data["is_timeout"].astype(str).str.strip().str.lower() == "true"
+# Calculate timeout rate per participant and condition
+timeout_rate = test_data.groupby(["participant", "control_condition"])["is_timeout"].mean().reset_index()
+# Identify participants who exceed the timeout threshold in either condition
+failed_rows = timeout_rate[timeout_rate["is_timeout"] >= TIMEOUT_THRESHOLD]
+# Extract unique participant IDs to exclude
+excluded_timeout_pts = failed_rows["participant"].unique().tolist()
+print(f"Criterion 1 (Timeout > 50%): Excluded {len(excluded_timeout_pts)} participants {excluded_timeout_pts}")
+# Formally exclude them from the main dataset (Uncommented for active use)
+data = data[~data["participant"].isin(excluded_timeout_pts)].copy()
+
+# --- Excl 2: Detection Accuracy 2.5 SD Outliers (Main Data) ---
+# We calculate each participant's overall detection accuracy across all test trials, then identify those whose accuracy is more than 2.5 SDs from the group mean (either too low or too high).
+test_data = data[data["phase"] == "test"].copy()
+# Ensure 'detection_accuracy' is numeric (if it's not already)
+pt_accuracy = test_data.groupby("participant")["detection_accuracy"].mean().reset_index()
+# Calculate group mean and SD
+group_mean_acc, group_sd_acc = pt_accuracy["detection_accuracy"].mean(), pt_accuracy["detection_accuracy"].std()
+# Define bounds for outliers
+lower_bound_acc = group_mean_acc - (2.5 * group_sd_acc)
+# Identify participants outside these bounds
+upper_bound_acc = group_mean_acc + (2.5 * group_sd_acc)
+# Participants with accuracy < lower_bound_acc or > upper_bound_acc are flagged for exclusion
+failed_acc_rows = pt_accuracy[(pt_accuracy["detection_accuracy"] < lower_bound_acc) | (pt_accuracy["detection_accuracy"] > upper_bound_acc)]
+# Extract unique participant IDs to exclude
+excluded_acc_pts = failed_acc_rows["participant"].tolist()
+# Print summary of this exclusion step
+print(f"Criterion 2 (Det Acc > 2.5 SD): Excluded {len(excluded_acc_pts)} participants {excluded_acc_pts}")
+# Formally exclude them from the main dataset (Uncommented for active use)
+data = data[~data["participant"].isin(excluded_acc_pts)].copy()
+
+# --- Excl 3: Calibration Failure (Main Data) ---
+calib_data = data[data["phase"] == "calibration"].copy()
+calib_data["quest_low_converged"] = calib_data["quest_low_converged"].astype(str).str.strip().str.lower() == "true"
+calib_data["quest_high_converged"] = calib_data["quest_high_converged"].astype(str).str.strip().str.lower() == "true"
+conv_low = calib_data.groupby("participant")["quest_low_converged"].any()
+conv_high = calib_data.groupby("participant")["quest_high_converged"].any()
+convergence_check = pd.DataFrame({"low_converged": conv_low, "high_converged": conv_high}).reset_index()
+failed_calib_rows = convergence_check[(convergence_check["low_converged"] == False) & (convergence_check["high_converged"] == False)]
+excluded_calib_pts = failed_calib_rows["participant"].tolist()
+print(f"Criterion 3 (Calibration Fail): Excluded {len(excluded_calib_pts)} participants {excluded_calib_pts}")
+data = data[~data["participant"].isin(excluded_calib_pts)].copy()
+
+# --- Sync Recognition Data to Main Data (Pre-trimming) ---
+valid_main_participants = data["participant"].unique()
+# Ensure recog_data only includes participants who passed the main data exclusions, so we don't do extra work on recognition data for participants who are already excluded.
+recog_data = recog_data[recog_data["participant"].isin(valid_main_participants)].copy()
+
+# --- RT Outlier Trimming (Recog Data) ---
+# We calculate the mean and SD of memory RTs for each participant, then exclude any trials where the RT is more than 3 SDs away from that participant's mean (either too fast or too slow).
 participant_mean_rt = recog_data.groupby("participant")["mem_rt"].transform("mean")
+# Calculate SD for each participants RTs to apply the 3 SD trimming
 participant_sd_rt = recog_data.groupby("participant")["mem_rt"].transform("std")
-
-# calculate upper and lower bounds for each trial based on participant mean and SD
-upper_bound = participant_mean_rt + (3 * participant_sd_rt)
-lower_bound = participant_mean_rt - (3 * participant_sd_rt)
-
-# create a boolean mask to identify valid trials (those within the bounds)
-valid_trials_mask = (recog_data["mem_rt"] >= lower_bound) & (recog_data["mem_rt"] <= upper_bound)
-
-# apply the mask to filter out invalid trials
+valid_trials_mask = (recog_data["mem_rt"] >= (participant_mean_rt - 3 * participant_sd_rt)) & \
+                    (recog_data["mem_rt"] <= (participant_mean_rt + 3 * participant_sd_rt))
 clean_recog_data = recog_data[valid_trials_mask].copy()
+print(f"RT Trimming: Removed {len(recog_data) - len(clean_recog_data)} trials outside of 3SD.")
 
-# report how many trials were removed
-trials_removed = len(recog_data) - len(clean_recog_data)
-print(f"EXCLUSION CRITERION 2: Removed {trials_removed} recognition trials outside of 3SD.")
+# --- Excl 4: Memory Floor/Ceiling (Recog Data) ---
+# We calculate each participant's overall memory accuracy (proportion of correct responses) across all recognition trials, then identify those whose accuracy is less than 55% (floor) or greater than 95% (ceiling), as these may indicate non-compliance or lack of engagement with the task.
+clean_recog_data['mem_response'] = clean_recog_data['mem_response'].astype(str).str.strip().str.lower()
+# Ensure 'mem_ground_truth' is also standardized to match the response formatting
+clean_recog_data['mem_ground_truth'] = clean_recog_data['mem_ground_truth'].astype(str).str.strip().str.lower()
+
+clean_recog_data['is_mem_correct'] = (
+    ((clean_recog_data['mem_ground_truth'] == 'seen') & (clean_recog_data['mem_response'] == 'yes')) |
+    ((clean_recog_data['mem_ground_truth'] == 'unseen') & (clean_recog_data['mem_response'] == 'no'))
+)
+# Calculate memory accuracy per participant
+mem_accuracy = clean_recog_data.groupby('participant')['is_mem_correct'].mean().reset_index()
+# Identify participants with accuracy <= 0.55 or >= 0.95
+failed_mem_rows = mem_accuracy[(mem_accuracy['is_mem_correct'] <= 0.55) | (mem_accuracy['is_mem_correct'] >= 0.95)]
+# Extract unique participant IDs to exclude
+excluded_mem_pts = failed_mem_rows['participant'].tolist()
+# Print summary of this exclusion step
+print(f"Criterion 4 (Floor/Ceiling): Identified {len(excluded_mem_pts)} participants {excluded_mem_pts}")
+
+# Formally exclude them from both datasets (Uncommented for active use)
+# We exclude them from the recognition data first, then also ensure they're excluded from the main data to keep everything in sync for later analyses.
+clean_recog_data = clean_recog_data[~clean_recog_data["participant"].isin(excluded_mem_pts)].copy()
+# We also need to exclude them from the main data to ensure that all subsequent analyses are based on the same final sample of participants.
+data = data[~data["participant"].isin(excluded_mem_pts)].copy()
+
+print(f"\nFINAL CLEAN SAMPLE: {data['participant'].nunique()} Participants")
 
 
-# NEXT STEP: MATCH EXCLUSIONS FROM BOTH DATASETS AND RUN ANALYSES
-# for t-test calculate d' for each participant and condition, then run a paired t-test comparing d' between controlled and uncontrolled items
+# =============================================================================
+# PHASE 3: MANIPULATION CHECKS
+# =============================================================================
+print("\n" + "="*40)
+print("PHASE 3: SANITY / MANIPULATION CHECKS")
+print("="*40)
 
-OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+# For the manipulation checks, we focus on the test phase data and compare the 'high' vs. 'low' control conditions on both detection accuracy and agency ratings. 
+# We will report both pooled means and per-participant means, along with paired t-tests to confirm that the manipulations had the intended effects.
+mani_data = data[data['control_condition'].isin(['high', 'low'])].copy()
+# Calculate pooled means and standard errors for each condition
+pt_means = mani_data.groupby(['participant', 'control_condition'])[['detection_accuracy', 'agency_rating']].mean().reset_index()
+# Calculate pooled means and standard errors for each condition
+manipulation_summary = pt_means.groupby('control_condition')[['detection_accuracy', 'agency_rating']].mean().reset_index()
+# Convert detection accuracy to percentage for easier interpretation
+manipulation_summary['detection_accuracy'] = manipulation_summary['detection_accuracy'] * 100
 
-# Make sure recognition data only includes the same participants that survived the main timeout exclusion.
-valid_participants = data["participant"].unique()
-print(f"Participants after timeout exclusion: {len(valid_participants)}")
+print("\nMANIPULATION CHECK SUMMARY")
+print("-" * 40)
+print(manipulation_summary.round(2).to_string(index=False)) 
 
-if len(valid_participants) == 0:
-    raise ValueError("No valid participants remain after timeout exclusions. Cannot continue recognition analysis.")
+# For the paired t-tests, we need to reshape the data so that we have one column for the 'high' condition and one for the 'low' condition for both agency ratings and detection accuracy. 
+# This allows us to directly compare the two conditions within each participant.
+wide_pt_means = pt_means.pivot(index='participant', columns='control_condition', values=['agency_rating', 'detection_accuracy']).dropna()
 
-clean_recog_data = clean_recog_data[clean_recog_data["participant"].isin(valid_participants)].copy()
+print("\n--- AGENCY RATING T-TEST (High vs. Low) ---")
+# We perform a paired t-test comparing the agency ratings in the 'high' vs. 'low' conditions across participants.
+agency_ttest = pg.ttest(wide_pt_means[('agency_rating', 'high')], wide_pt_means[('agency_rating', 'low')], paired=True)
+# The output includes the t-statistic, degrees of freedom, p-value, and confidence intervals for the mean difference
+# which will help us determine if there is a statistically significant difference in perceived agency between the two conditions.
+print(agency_ttest.to_string())
 
-if clean_recog_data.empty:
-    print("Warning: Recognition data contains no trials after matching exclusions. Check participant filtering and recognition files.")
-else:
-    print(f"Recognition trials after matching exclusions: {len(clean_recog_data)}")
+print("\n--- DETECTION ACCURACY T-TEST (High vs. Low) ---")
+# We perform a paired t-test comparing the detection accuracy in the 'high' vs. 'low' conditions across participants 
+# to confirm that the manipulation effectively influenced their ability to detect the targets.
+acc_ttest = pg.ttest(wide_pt_means[('detection_accuracy', 'high')], wide_pt_means[('detection_accuracy', 'low')], paired=True)
+print(acc_ttest.to_string())
 
-# Standardize recognition labels
-clean_recog_data["mem_response"] = clean_recog_data["mem_response"].astype(str).str.strip().str.lower()
-clean_recog_data["mem_ground_truth"] = clean_recog_data["mem_ground_truth"].astype(str).str.strip().str.lower()
+
+# =============================================================================
+# PHASE 4: VARIABLE DERIVATION & D-PRIME
+# =============================================================================
+print("\n" + "="*40)
+print("PHASE 4: VARIABLE DERIVATION")
+print("="*40)
+
+# Before we can compute d-prime, we need to ensure that the recognition data is clean and standardized.
+# We will standardize the 'mem_response' and 'mem_ground_truth' columns to ensure that they are in a consistent format (e.g., all lowercase, no extra spaces) so that we can accurately count hits, misses, false alarms, and correct rejections.
 clean_recog_data["controlled"] = clean_recog_data["controlled"].astype(str).str.strip().str.lower()
 
-# Function to compute d-prime with loglinear correction
-
-print("\n--- DEBUGGING ---")
-print("Actual words in mem_response:", clean_recog_data["mem_response"].unique())
-
+# --- Compute d-prime ---
+# The d-prime calculation requires us to count the number of hits, misses, false alarms, and correct rejections for each participant and condition.
 def compute_d_prime(hits, misses, false_alarms, correct_rejections):
     hit_rate = (hits + 0.5) / (hits + misses + 1)
     fa_rate = (false_alarms + 0.5) / (false_alarms + correct_rejections + 1)
     return norm.ppf(hit_rate) - norm.ppf(fa_rate)
 
-# Compute false alarm counts per participant using all new/unseen trials
+# First, we calculate the false alarm and correct rejection counts for each participant based on the 'unseen' trials 
+# since these are the trials where a "yes" response would be a false alarm and a "no" response would be a correct rejection.
 false_alarm_stats = (
     clean_recog_data[clean_recog_data["mem_ground_truth"] == "unseen"]
     .groupby("participant")["mem_response"]
-    .value_counts()
-    .unstack(fill_value=0)
-    # Changed "yes"/"no" to "old"/"new" to match your data!
-    .rename(columns={"yes": "false_alarms", "no": "correct_rejections"})
-    .reset_index()
+    .value_counts().unstack(fill_value=0)
+    .rename(columns={"yes": "false_alarms", "no": "correct_rejections"}).reset_index()
 )
-
+# We need to ensure that if a participant has no false alarms or no correct rejections, we still have those columns in the dataframe with a count of 0, otherwise our d-prime calculation will fail for those participants.
 for col in ["false_alarms", "correct_rejections"]:
-    if col not in false_alarm_stats.columns:
-        false_alarm_stats[col] = 0
+    if col not in false_alarm_stats.columns: false_alarm_stats[col] = 0
 
+# Next, we iterate through each participant and condition in the 'seen' trials to count hits and misses, and then merge those counts with the false alarm stats to compute d-prime for each participant and condition.
 rows = []
+# We loop through each participant's data in the recognition dataset, and for each participant, we retrieve their false alarm and correct rejection counts from the false_alarm_stats dataframe.
 for participant, subject_data in clean_recog_data.groupby("participant"):
     fa_row = false_alarm_stats[false_alarm_stats["participant"] == participant]
-    if fa_row.empty:
-        continue
-    false_alarms = int(fa_row["false_alarms"].iloc[0])
-    correct_rejections = int(fa_row["correct_rejections"].iloc[0])
-
+    if fa_row.empty: continue
+    fa, cr = int(fa_row["false_alarms"].iloc[0]), int(fa_row["correct_rejections"].iloc[0])
+# Then, for each condition (high vs. low control) within the 'seen' trials, we count the number of hits (where mem_response is "yes") and misses (where mem_response is "no"), and use those counts along with the false alarm and correct rejection counts to compute d-prime for that participant and condition.
     for condition, condition_data in subject_data[subject_data["mem_ground_truth"] == "seen"].groupby("controlled"):
-        # We also need to make sure your 'controlled' column uses 'yes'/'no' or update this to 'high'/'low'!
-        if condition not in {"yes", "no"}:
-            continue
-        
-        # Changed "yes"/"no" to "old"/"new" here as well
-        hits = (condition_data["mem_response"] == "yes").sum()
-        misses = (condition_data["mem_response"] == "no").sum()
-        
-        d_prime = compute_d_prime(hits, misses, false_alarms, correct_rejections)
-        rows.append({
-            "participant": participant,
-            "controlled": condition,
-            "hits": hits,
-            "misses": misses,
-            "false_alarms": false_alarms,
-            "correct_rejections": correct_rejections,
-            "d_prime": d_prime,
-        })
-
-if not rows:
-    raise ValueError("No d-prime rows were generated. Check recognition labels and controlled annotation.")
+        if condition not in {"yes", "no"}: continue
+        hits, misses = (condition_data["mem_response"] == "yes").sum(), (condition_data["mem_response"] == "no").sum()
+        rows.append({"participant": participant, "controlled": condition, "hits": hits, "misses": misses,
+                     "false_alarms": fa, "correct_rejections": cr, "d_prime": compute_d_prime(hits, misses, fa, cr)})
 
 results_df = pd.DataFrame(rows)
 results_df.to_csv(OUTPUT_DIR / "dprime_by_condition.csv", index=False)
+print("Saved d' summaries to analysis_output/dprime_by_condition.csv")
 
 print("\nD-prime results by participant and condition:")
 print(results_df.groupby("controlled")["d_prime"].describe())
 
-wide_dprime = results_df.pivot(index="participant", columns="controlled", values="d_prime").dropna()
-print(f"\nParticipants with both conditions available: {len(wide_dprime)}")
+# --- Z-Score Agency Ratings ---
+# To make the agency ratings more comparable across participants, we will z-score them within each participant. 
+# This means that for each participant, we will subtract their mean agency rating from each of their ratings and then divide by their standard deviation. 
+# This standardization allows us to interpret the agency ratings in terms of how many standard deviations they are above or below that participant's average rating, which can help account for individual differences in how participants use the rating scale.
+data['agency_z'] = data.groupby('participant')['agency_rating'].transform(lambda x: (x - x.mean()) / x.std())
 
-if len(wide_dprime) < 2:
-    print("Not enough paired participants to run a paired t-test.")
-else:
-    ttest_results = pg.ttest(wide_dprime["yes"], wide_dprime["no"], paired=True)
-    print("\nPaired t-test comparing d' for controlled=yes vs controlled=no")
-    print(ttest_results)
+# --- Merge Main Data vars into Recognition Targets ---
+# We need to merge the main data variables (like control condition, detection accuracy, and agency rating) into the recognition data for the 'seen' trials (targets) so that we can use those variables as predictors in our GLMMs.
+targets = clean_recog_data[clean_recog_data['mem_ground_truth'] == 'seen'].copy()
 
-
-import polars as pl
-from pymer4.models import glmer
-
-# =============================================================================
-# STEP 2: Prepare the TARGET trials (old items)
-# =============================================================================
-# "Targets" are images that were ACTUALLY shown to participants during encoding.
-# In the recognition file, these are rows where mem_ground_truth == 'seen'.
-#
-# We also need to know WHICH control condition each image came from
-# (HIGH or LOW), because that's our key predictor.
-# That information lives in the main task file, not in the recognition file.
-
-# --- 2a. Pull out only the "seen" images from recognition ---
-targets = recog_data[recog_data['mem_ground_truth'] == 'seen'].copy()
-
-# --- 2b. Build a lookup table: image filename → control condition ---
-# We extract Image A and Image B from the main task data (named 'data'), 
-# grab their condition, and rename the columns so they match the recognition data.
-lookup_A = data[['participant', 'img_A_name', 'control_condition']].copy()
-lookup_A = lookup_A.rename(columns={'img_A_name': 'mem_filename'})
-
-lookup_B = data[['participant', 'img_B_name', 'control_condition']].copy()
-lookup_B = lookup_B.rename(columns={'img_B_name': 'mem_filename'})
-
-# Combine them and drop any duplicates to make a clean dictionary/lookup table
+# Remove 'trial_level' from the lists below, just keeping 'control_condition'
+# We create two lookup tables: one for the 'img_A_name' and one for the 'img_B_name', which contain the participant ID, image filename, control condition, detection accuracy, and z-scored agency rating.
+# We then concatenate these two lookup tables together and drop duplicates to create a single lookup table that we can merge with the recognition data based on participant ID and image filename.
+lookup_A = data[['participant', 'img_A_name', 'control_condition', 'detection_accuracy', 'agency_z']].rename(columns={'img_A_name': 'mem_filename'})
+lookup_B = data[['participant', 'img_B_name', 'control_condition', 'detection_accuracy', 'agency_z']].rename(columns={'img_B_name': 'mem_filename'})
 img_lookup = pd.concat([lookup_A, lookup_B], ignore_index=True).drop_duplicates()
 
-# --- 2c. Merge condition info into the targets dataframe ---
+# If the recognition data already has a blank/old control_condition column, drop it so they merge cleanly
+if 'control_condition' in targets.columns:
+    targets = targets.drop(columns=['control_condition'])
+
 targets = targets.merge(img_lookup, on=['participant', 'mem_filename'], how='left')
 
-# --- 2d. For Analysis 4 (PRIMARY analysis), we only care about
-#         whether the trial was HIGH vs LOW control.
-#         The 'control_condition' column is the trial_level for controlled items,
-#         and 'uncontrolled' for uncontrolled items.
-#         (For this primary analysis, we keep both item types but label them by
-#          trial condition, not by whether the item itself was controlled.)
-
-# Overwrite the 'control_condition' with the overall trial condition.
-# Note: Ensure that 'trial_level' is the exact name of the column from your main data 
-# that holds the overarching "high" or "low" status for the whole trial!
-targets['control_condition'] = targets['trial_level']
-
-# Convert the yes/no memory response to a binary integer (1 = said "old", 0 = said "new")
-# We use .str.lower() just to be safe, in case there are any capitalized "Old" or "New" entries.
-# Then we map those text values to integers.
-targets['mem_response_bin'] = targets['mem_response'].str.lower().map({'old': 1, 'new': 0})
-
-# =============================================================================
-# STEP 3: Prepare the FOIL trials (new items)
-# =============================================================================
-# "Foils" are images that were NEVER shown during encoding.
-# In the recognition file, these are rows where mem_ground_truth == 'unseen'.
-#
-# The key difference from targets: foils have NO real control condition,
-# because they were never part of the main task.
-#
-# For the interaction model, we need to assign foils to a control condition
-# anyway (so the model has something to estimate). We do this with a
-# BALANCED DUMMY ASSIGNMENT — split foils 50/50 into "high" and "low"
-# per participant. Because the assignment is balanced, it doesn't bias
-# the estimate of the interaction, but it IS a modelling choice you
-# should report in your methods section.
-
-foils = recog_data[recog_data['mem_ground_truth'] == 'unseen'].copy()
-
-# Sort within participant so the split is deterministic
-
+# --- Assign Foils ---
+# For the 'unseen' trials (foils), we will assign a control condition based on the order in which they appear for each participant.
+# We will sort the foils by participant and image filename, then assign the first half of the foils for each participant to the 'high' control condition and the second half to the 'low' control condition. 
+# This is a somewhat arbitrary assignment, but it allows us to include the foils in our analyses with a control condition variable that we can use in the GLMMs, even though the foils were not actually presented during the test phase. 
+# This way, we can compare the recognition performance for targets and foils across the two control conditions, which is important for our research questions about how the manipulations affect memory performance.
+foils = clean_recog_data[clean_recog_data['mem_ground_truth'] == 'unseen'].copy()
+# We sort the foils by participant and image filename to ensure that the assignment of control conditions is consistent within each participant.ß
 foils = foils.sort_values(by=['participant', 'mem_filename'])
-
-# Assign dummy control condition: first half of each participant's foils → "high",
-# second half → "low"
-# this is because the foils were not shown in the control detection task so they dont belong to any condition, however for the model to work we need to assign them artificial conditions
-
+# We use the groupby and cumcount functions to assign a row number to each foil trial within each participant, which allows us to determine which trials belong to the first half and which belong to the second half for the purpose of assigning control conditions.
 row_numbers = foils.groupby('participant').cumcount()
+# We calculate the total number of foils for each participant using the transform function, which allows us to assign the 'high' control condition to the first half of the foils and the 'low' control condition to the second half for each participant.
 total_foils = foils.groupby('participant')['mem_ground_truth'].transform('count')
+# We use the np.where function to assign the control condition based on whether the row number for each foil trial is less than half of the total number of foils for that participant.
 foils['control_condition'] = np.where(row_numbers < (total_foils / 2), 'high', 'low')
 
-# Optional: Print a quick check to verify the split worked!
-print("Foil dummy condition assignment complete:")
-print(foils[['participant', 'mem_filename', 'control_condition']].head(10))
-
-# =============================================================================
-# STEP 4: Combine targets and foils; add contrast codes
-# =============================================================================
-
-# 1. Combine targets and foils into a single dataframe
-# ignore_index=True ensures the new dataframe has a clean row count from 0 to the end
+# --- Combine Model Data & Contrast Code ---
+# Finally, we concatenate the targets and foils back together to create a single dataset that we can use for our GLMM analyses.
+# We also create contrast-coded variables for the item type (target vs. foil) and control condition (high vs. low), as well as a binary variable for whether the participant said "old" or "new" and a log-transformed variable for memory RT, which will be used as the dependent variable in our GLMMs.
 model_data = pd.concat([targets, foils], ignore_index=True)
-
-# 2. Apply contrast coding for Item Type
-# If the item is a target ('seen'), assign +0.5. Otherwise (it's a foil), assign -0.5.
+# For the item type contrast code, we assign a value of 0.5 to the 'seen' trials (targets) and -0.5 to the 'unseen' trials (foils).
 model_data['item_type_c'] = np.where(model_data['mem_ground_truth'] == 'seen', 0.5, -0.5)
-
-# 3. Apply contrast coding for Control Condition
-# If the condition is 'high', assign +0.5. Otherwise (it's 'low'), assign -0.5.
+# For the control condition contrast code, we assign a value of 0.5 to the 'high' control condition and -0.5 to the 'low' control condition.ß
 model_data['control_c'] = np.where(model_data['control_condition'] == 'high', 0.5, -0.5)
-
-# 4. Convert the finalized pandas dataframe into a polars dataframe for pymer4
-model_data_pl = pl.DataFrame(model_data)
-
-# Print a quick check to verify our final dataset is ready!
-print("\n--- STEP 4 COMPLETE ---")
-print("Final modeling dataset created with {len(model_data_pl)} rows.")
-print("First 5 rows of contrast codes:")
-print(model_data[['mem_ground_truth', 'item_type_c', 'control_condition', 'control_c']].head())
-
-# =============================================================================
-# STEP 5: Fit the Generalized Linear Mixed Model (GLMM) - Analysis 4
-# =============================================================================
-from pymer4.models import glmer 
-
-# 1. Fix the Dependent Variable for ALL data
-model_data['said_old_int'] = model_data['mem_response'].str.lower().map({'yes': 1, 'no': 0})
-
-# Update our polars dataframe
-model_data_pl = pl.DataFrame(model_data)
-
-# 2. Define the Formulas
-maximal_formula = "said_old_int ~ item_type_c * control_c + (1 + item_type_c * control_c | participant)"
-fallback_formula = "said_old_int ~ item_type_c * control_c + (1 | participant)"
-
-# 3. Fit Maximal Model
-print("\n" + "="*40)
-print("FITTING MAXIMAL GLMM MODEL")
-print("="*40)
-model_max = glmer(maximal_formula, data=model_data_pl, family="binomial")
-model_max.fit()
-
-print("\n--- MAXIMAL MODEL RESULTS ---")
-print(model_max.result_fit)
-
-
-# 4. Fit Fallback Model
-print("\n" + "="*40)
-print("FITTING GLMM MODEL")
-print("="*40)
-
-model_fallback = glmer(fallback_formula, data=model_data_pl, family="binomial")
-model_fallback.fit()
-
-print("\n--- FALLBACK MODEL RESULTS ---")
-print(model_fallback.result_fit)
-
-# =============================================================================
-# STEP 6: Reaction Time (RT) Analysis (Analysis B — Gaussian LMM)
-# =============================================================================
-from pymer4.models import lmer
-
-print("\n" + "="*40)
-print("PREPARING REACTION TIME DATA")
-print("="*40)
-
-# 1. Log-transform the reaction times
-# We use np.log() to calculate the natural logarithm for the valid reaction times.
-# We are applying this to 'model_data' which already has the +/- 3SD bounds applied.
+# We create a binary variable for whether the participant said "old" (1) or "new" (0) based on their memory response, which will be used as the dependent variable in our binomial GLMMs.
+model_data['said_old_int'] = model_data['mem_response'].map({'yes': 1, 'no': 0})
+# We create a log-transformed variable for memory RT to use as the dependent variable in our Gaussian LMMs, which can help normalize the distribution of RTs and reduce the influence of outliers.
+# We add a small constant (e.g., 1) to the RTs before taking the log to avoid issues with log(0) if there are any trials with an RT of 0.
+# Note: If there are any negative RTs (which shouldn't happen but just in case), we would need to handle those separately, perhaps by excluding them or setting them to a small positive value before log transformation.
 model_data['log_mem_rt'] = np.log(model_data['mem_rt'])
 
-# 2. Convert the entire pandas dataframe into a polars dataframe for pymer4
-# We use all items with valid RTs, bypassing the 'correct trials only' filter.
-rt_data_pl = pl.DataFrame(model_data)
 
-# 3. Define the Gaussian LMM Formula matching your specification
-rt_formula = "log_mem_rt ~ item_type_c * control_c + (1 | participant)"
-
-# 4. Fit the Gaussian Linear Mixed Model
+# =============================================================================
+# PHASE 5: GLMMs & LMMs (RQ1, RQ2, RQ3)
+# =============================================================================
 print("\n" + "="*40)
-print("FITTING GAUSSIAN LMM MODEL (LOG RT, ALL VALID TRIALS)")
+print("PHASE 5: STATISTICAL MODELS")
 print("="*40)
 
-# The default family in Lmer is Gaussian, fitting your model perfectly
-rt_model = lmer(rt_formula, data=rt_data_pl)
-rt_model.fit()
+# --- 5A. RQ1: Motor Control -> Memory (All Data) ---
+print("\n--- RQ1: Binomial GLMM (said_old ~ item_type * control) ---")
+model_data_pl = pl.DataFrame(model_data)
+rq1_bin = glmer("said_old_int ~ item_type_c * control_c + (1 | participant)", data=model_data_pl, family="binomial")
+rq1_bin.fit()
+print(rq1_bin.result_fit)
 
-print("\n--- REACTION TIME MODEL RESULTS ---")
-print(rt_model.result_fit)
+print("\n--- RQ1: Gaussian LMM (log_RT ~ item_type * control) ---")
+rq1_rt = lmer("log_mem_rt ~ item_type_c * control_c + (1 | participant)", data=model_data_pl)
+rq1_rt.fit()
+print(rq1_rt.result_fit)
