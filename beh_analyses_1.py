@@ -203,43 +203,35 @@ print(acc_ttest.to_string())
 
 
 # =============================================================================
-# PHASE 4: VARIABLE DERIVATION & D-PRIME
+# PHASE 4: VARIABLE DERIVATION
 # =============================================================================
 print("\n" + "="*40)
 print("PHASE 4: VARIABLE DERIVATION")
 print("="*40)
 
-# Before we can compute d-prime, we need to ensure that the recognition data is clean and standardized.
-# We will standardize the 'mem_response' and 'mem_ground_truth' columns to ensure that they are in a consistent format (e.g., all lowercase, no extra spaces) so that we can accurately count hits, misses, false alarms, and correct rejections.
 clean_recog_data["controlled"] = clean_recog_data["controlled"].astype(str).str.strip().str.lower()
 
 # --- Compute d-prime ---
-# The d-prime calculation requires us to count the number of hits, misses, false alarms, and correct rejections for each participant and condition.
 def compute_d_prime(hits, misses, false_alarms, correct_rejections):
     hit_rate = (hits + 0.5) / (hits + misses + 1)
     fa_rate = (false_alarms + 0.5) / (false_alarms + correct_rejections + 1)
     return norm.ppf(hit_rate) - norm.ppf(fa_rate)
 
-# First, we calculate the false alarm and correct rejection counts for each participant based on the 'unseen' trials 
-# since these are the trials where a "yes" response would be a false alarm and a "no" response would be a correct rejection.
 false_alarm_stats = (
     clean_recog_data[clean_recog_data["mem_ground_truth"] == "unseen"]
     .groupby("participant")["mem_response"]
     .value_counts().unstack(fill_value=0)
     .rename(columns={"yes": "false_alarms", "no": "correct_rejections"}).reset_index()
 )
-# We need to ensure that if a participant has no false alarms or no correct rejections, we still have those columns in the dataframe with a count of 0, otherwise our d-prime calculation will fail for those participants.
 for col in ["false_alarms", "correct_rejections"]:
     if col not in false_alarm_stats.columns: false_alarm_stats[col] = 0
 
-# Next, we iterate through each participant and condition in the 'seen' trials to count hits and misses, and then merge those counts with the false alarm stats to compute d-prime for each participant and condition.
 rows = []
-# We loop through each participant's data in the recognition dataset, and for each participant, we retrieve their false alarm and correct rejection counts from the false_alarm_stats dataframe.
 for participant, subject_data in clean_recog_data.groupby("participant"):
     fa_row = false_alarm_stats[false_alarm_stats["participant"] == participant]
     if fa_row.empty: continue
     fa, cr = int(fa_row["false_alarms"].iloc[0]), int(fa_row["correct_rejections"].iloc[0])
-# Then, for each condition (high vs. low control) within the 'seen' trials, we count the number of hits (where mem_response is "yes") and misses (where mem_response is "no"), and use those counts along with the false alarm and correct rejection counts to compute d-prime for that participant and condition.
+
     for condition, condition_data in subject_data[subject_data["mem_ground_truth"] == "seen"].groupby("controlled"):
         if condition not in {"yes", "no"}: continue
         hits, misses = (condition_data["mem_response"] == "yes").sum(), (condition_data["mem_response"] == "no").sum()
@@ -250,78 +242,214 @@ results_df = pd.DataFrame(rows)
 results_df.to_csv(OUTPUT_DIR / "dprime_by_condition.csv", index=False)
 print("Saved d' summaries to analysis_output/dprime_by_condition.csv")
 
-print("\nD-prime results by participant and condition:")
-print(results_df.groupby("controlled")["d_prime"].describe())
-
-# --- Z-Score Agency Ratings ---
-# To make the agency ratings more comparable across participants, we will z-score them within each participant. 
-# This means that for each participant, we will subtract their mean agency rating from each of their ratings and then divide by their standard deviation. 
-# This standardization allows us to interpret the agency ratings in terms of how many standard deviations they are above or below that participant's average rating, which can help account for individual differences in how participants use the rating scale.
-data['agency_z'] = data.groupby('participant')['agency_rating'].transform(lambda x: (x - x.mean()) / x.std())
-
 # --- Merge Main Data vars into Recognition Targets ---
-# We need to merge the main data variables (like control condition, detection accuracy, and agency rating) into the recognition data for the 'seen' trials (targets) so that we can use those variables as predictors in our GLMMs.
 targets = clean_recog_data[clean_recog_data['mem_ground_truth'] == 'seen'].copy()
 
-# Remove 'trial_level' from the lists below, just keeping 'control_condition'
-# We create two lookup tables: one for the 'img_A_name' and one for the 'img_B_name', which contain the participant ID, image filename, control condition, detection accuracy, and z-scored agency rating.
-# We then concatenate these two lookup tables together and drop duplicates to create a single lookup table that we can merge with the recognition data based on participant ID and image filename.
-lookup_A = data[['participant', 'img_A_name', 'control_condition', 'detection_accuracy', 'agency_z']].rename(columns={'img_A_name': 'mem_filename'})
-lookup_B = data[['participant', 'img_B_name', 'control_condition', 'detection_accuracy', 'agency_z']].rename(columns={'img_B_name': 'mem_filename'})
+# Pull detection accuracy from the main task data
+lookup_A = data[['participant', 'img_A_name', 'control_condition', 'detection_accuracy']].rename(columns={'img_A_name': 'mem_filename'})
+lookup_B = data[['participant', 'img_B_name', 'control_condition', 'detection_accuracy']].rename(columns={'img_B_name': 'mem_filename'})
 img_lookup = pd.concat([lookup_A, lookup_B], ignore_index=True).drop_duplicates()
 
-# If the recognition data already has a blank/old control_condition column, drop it so they merge cleanly
 if 'control_condition' in targets.columns:
     targets = targets.drop(columns=['control_condition'])
 
 targets = targets.merge(img_lookup, on=['participant', 'mem_filename'], how='left')
 
-# --- Assign Foils ---
-# For the 'unseen' trials (foils), we will assign a control condition based on the order in which they appear for each participant.
-# We will sort the foils by participant and image filename, then assign the first half of the foils for each participant to the 'high' control condition and the second half to the 'low' control condition. 
-# This is a somewhat arbitrary assignment, but it allows us to include the foils in our analyses with a control condition variable that we can use in the GLMMs, even though the foils were not actually presented during the test phase. 
-# This way, we can compare the recognition performance for targets and foils across the two control conditions, which is important for our research questions about how the manipulations affect memory performance.
+# --- Assign Foils (Dummy Conditions) ---
 foils = clean_recog_data[clean_recog_data['mem_ground_truth'] == 'unseen'].copy()
-# We sort the foils by participant and image filename to ensure that the assignment of control conditions is consistent within each participant.ß
 foils = foils.sort_values(by=['participant', 'mem_filename'])
-# We use the groupby and cumcount functions to assign a row number to each foil trial within each participant, which allows us to determine which trials belong to the first half and which belong to the second half for the purpose of assigning control conditions.
 row_numbers = foils.groupby('participant').cumcount()
-# We calculate the total number of foils for each participant using the transform function, which allows us to assign the 'high' control condition to the first half of the foils and the 'low' control condition to the second half for each participant.
 total_foils = foils.groupby('participant')['mem_ground_truth'].transform('count')
-# We use the np.where function to assign the control condition based on whether the row number for each foil trial is less than half of the total number of foils for that participant.
+
+# Assign Dummy Control Condition (50% high, 50% low)
 foils['control_condition'] = np.where(row_numbers < (total_foils / 2), 'high', 'low')
 
+# Assign Dummy Item Type (50% controlled/yes, 50% uncontrolled/no)
+# We use modulo 2 to alternate yes/no evenly across the foils
+foils['controlled'] = np.where(row_numbers % 2 == 0, 'yes', 'no')
+
 # --- Combine Model Data & Contrast Code ---
-# Finally, we concatenate the targets and foils back together to create a single dataset that we can use for our GLMM analyses.
-# We also create contrast-coded variables for the item type (target vs. foil) and control condition (high vs. low), as well as a binary variable for whether the participant said "old" or "new" and a log-transformed variable for memory RT, which will be used as the dependent variable in our GLMMs.
 model_data = pd.concat([targets, foils], ignore_index=True)
-# For the item type contrast code, we assign a value of 0.5 to the 'seen' trials (targets) and -0.5 to the 'unseen' trials (foils).
-model_data['item_type_c'] = np.where(model_data['mem_ground_truth'] == 'seen', 0.5, -0.5)
-# For the control condition contrast code, we assign a value of 0.5 to the 'high' control condition and -0.5 to the 'low' control condition.ß
-model_data['control_c'] = np.where(model_data['control_condition'] == 'high', 0.5, -0.5)
-# We create a binary variable for whether the participant said "old" (1) or "new" (0) based on their memory response, which will be used as the dependent variable in our binomial GLMMs.
+
+# Dependent Variables
 model_data['said_old_int'] = model_data['mem_response'].map({'yes': 1, 'no': 0})
-# We create a log-transformed variable for memory RT to use as the dependent variable in our Gaussian LMMs, which can help normalize the distribution of RTs and reduce the influence of outliers.
-# We add a small constant (e.g., 1) to the RTs before taking the log to avoid issues with log(0) if there are any trials with an RT of 0.
-# Note: If there are any negative RTs (which shouldn't happen but just in case), we would need to handle those separately, perhaps by excluding them or setting them to a small positive value before log transformation.
-model_data['log_mem_rt'] = np.log(model_data['mem_rt'])
+model_data['log_mem_rt'] = np.log(model_data['mem_rt']) # Step D7
+
+# Predictor 1: Control Condition (+0.5 High, -0.5 Low)
+model_data['control_c'] = np.where(model_data['control_condition'] == 'high', 0.5, -0.5)
+
+# Predictor 2: Item Type (+0.5 Controlled, -0.5 Uncontrolled)
+model_data['item_type_c'] = np.where(model_data['controlled'] == 'yes', 0.5, -0.5)
+
+# Predictor 3: Detection Accuracy (+0.5 Correct, -0.5 Incorrect) - Step D6
+# We use np.nan for foils since they don't have detection accuracy data
+model_data['detection_accuracy_c'] = np.where(model_data['detection_accuracy'] == 1, 0.5, 
+                                     np.where(model_data['detection_accuracy'] == 0, -0.5, np.nan))
 
 
-# =============================================================================
-# PHASE 5: GLMMs & LMMs (RQ1, RQ2, RQ3)
+## =============================================================================
+# PHASE 5: GLMMs & LMMs (RQ1 & RQ2)
 # =============================================================================
 print("\n" + "="*40)
 print("PHASE 5: STATISTICAL MODELS")
 print("="*40)
 
-# --- 5A. RQ1: Motor Control -> Memory (All Data) ---
-print("\n--- RQ1: Binomial GLMM (said_old ~ item_type * control) ---")
 model_data_pl = pl.DataFrame(model_data)
+
+# -----------------------------------------------------------------------------
+# 5A&B. RQ1: Control Level to Recognition (Data: All recognition items)
+# -----------------------------------------------------------------------------
+print("\n--- RQ1 Analysis A: Binomial GLMM (said_old ~ item_type * control) ---")
+# Using the fallback model as standard; you can swap to maximal if your full dataset supports it
 rq1_bin = glmer("said_old_int ~ item_type_c * control_c + (1 | participant)", data=model_data_pl, family="binomial")
 rq1_bin.fit()
 print(rq1_bin.result_fit)
 
-print("\n--- RQ1: Gaussian LMM (log_RT ~ item_type * control) ---")
+print("\n--- RQ1 Analysis B: Gaussian LMM (log_RT ~ item_type * control) ---")
 rq1_rt = lmer("log_mem_rt ~ item_type_c * control_c + (1 | participant)", data=model_data_pl)
 rq1_rt.fit()
 print(rq1_rt.result_fit)
+
+# -----------------------------------------------------------------------------
+# 5C&D. RQ2: Detection Accuracy to Recognition (Data: Targets only)
+# -----------------------------------------------------------------------------
+# Filter for target items with valid detection data (drops the foils)
+rq2_data = model_data[(model_data['mem_ground_truth'] == 'seen')].dropna(subset=['detection_accuracy_c']).copy()
+rq2_data_pl = pl.DataFrame(rq2_data)
+
+print("\n--- RQ2 Analysis C: Binomial GLMM (3-Way Interaction) ---")
+rq2_formula_bin = "said_old_int ~ detection_accuracy_c * control_c * item_type_c + (1 | participant)"
+rq2_bin = glmer(rq2_formula_bin, data=rq2_data_pl, family="binomial")
+rq2_bin.fit()
+print(rq2_bin.result_fit)
+
+print("\n--- RQ2 Analysis D: Gaussian LMM (3-Way Interaction) ---")
+rq2_formula_rt = "log_mem_rt ~ detection_accuracy_c * control_c * item_type_c + (1 | participant)"
+rq2_rt = lmer(rq2_formula_rt, data=rq2_data_pl)
+rq2_rt.fit()
+print(rq2_rt.result_fit)
+
+# =============================================================================
+# PHASE 6: PLOTTING (WITH CUSTOM COLOR PALETTES)
+# =============================================================================
+print("\n" + "="*40)
+print("PHASE 6: GENERATING PLOTS")
+print("="*40)
+
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+# Set global seaborn styling
+sns.set_theme(style="whitegrid")
+PLOT_DIR = OUTPUT_DIR / "plots"
+PLOT_DIR.mkdir(parents=True, exist_ok=True)
+
+# -----------------------------------------------------------------------------
+# DEFINE COLOR PALETTES 
+# -----------------------------------------------------------------------------
+# 1. Condition Colors (Blue for High, Orange for Low)
+COND_COLORS = {'high': '#3a76af', 'low': '#e38041'}
+
+# 2. Item Type Colors (Teal for Controlled/Yes, Peach for Uncontrolled/No)
+ITEM_COLORS = {'yes': '#88b5a1', 'no': '#df987b'}
+
+# 3. Participant Colors (Assign a unique, consistent color to each participant)
+unique_pts = pt_means['participant'].unique()
+pt_palette = sns.color_palette("tab10", n_colors=len(unique_pts))
+PT_COLORS = {pt: color for pt, color in zip(unique_pts, pt_palette)}
+
+# -----------------------------------------------------------------------------
+# H3: Sanity Check Plots (2x2 Grid)
+# -----------------------------------------------------------------------------
+mani_data['detection_accuracy_pct'] = mani_data['detection_accuracy'] * 100
+
+fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+fig.suptitle('Sanity Checks: Agency Rating & Detection Accuracy', fontsize=16)
+
+# Top Left: Pooled Agency Rating
+sns.barplot(data=mani_data, x='control_condition', y='agency_rating', capsize=.1, errorbar='se', palette=COND_COLORS, hue='control_condition', ax=axes[0, 0])
+axes[0, 0].set_title('Pooled Agency Rating')
+axes[0, 0].set_ylabel('Agency Rating')
+
+# Top Right: Per Participant Agency Rating
+sns.lineplot(data=pt_means, x='control_condition', y='agency_rating', hue='participant', palette=PT_COLORS, marker='o', linewidth=2, ax=axes[0, 1])
+axes[0, 1].set_title('Per Participant Agency Rating')
+axes[0, 1].legend(title='Participant', bbox_to_anchor=(1.05, 1), loc='upper left')
+
+# Bottom Left: Pooled Detection Accuracy
+sns.barplot(data=mani_data, x='control_condition', y='detection_accuracy_pct', capsize=.1, errorbar='se', palette=COND_COLORS, hue='control_condition', ax=axes[1, 0])
+axes[1, 0].set_title('Pooled Detection Accuracy (%)')
+axes[1, 0].set_ylabel('Accuracy (%)')
+
+# Bottom Right: Per Participant Detection Accuracy
+pt_means['detection_accuracy_pct'] = pt_means['detection_accuracy'] * 100
+sns.lineplot(data=pt_means, x='control_condition', y='detection_accuracy_pct', hue='participant', palette=PT_COLORS, marker='o', linewidth=2, ax=axes[1, 1])
+axes[1, 1].set_title('Per Participant Accuracy (%)')
+axes[1, 1].legend_.remove() # Remove redundant legend
+
+plt.tight_layout()
+plt.savefig(PLOT_DIR / "H3_Sanity_Checks.png", dpi=300, bbox_inches='tight')
+plt.close()
+print("Saved H3 Sanity Check Plots.")
+
+# -----------------------------------------------------------------------------
+# H1: d' Plots (3-Panel Figure)
+# -----------------------------------------------------------------------------
+fig, axes = plt.subplots(1, 3, figsize=(15, 5))
+fig.suptitle("Memory Performance (d')", fontsize=16)
+
+# 1. Pooled Barplot
+sns.barplot(data=results_df, x='controlled', y='d_prime', capsize=.1, errorbar='se', palette=ITEM_COLORS, hue='controlled', ax=axes[0])
+axes[0].set_title('Pooled Mean d-prime')
+axes[0].set_ylabel("d'")
+axes[0].set_xticklabels(['Uncontrolled (No)', 'Controlled (Yes)'])
+
+# 2. Violin Plot (Distribution)
+sns.violinplot(data=results_df, x='controlled', y='d_prime', inner='point', palette=ITEM_COLORS, hue='controlled', ax=axes[1])
+axes[1].set_title("Distribution of d'")
+axes[1].set_ylabel("d'")
+axes[1].set_xticklabels(['Uncontrolled', 'Controlled'])
+
+# 3. Per Participant Lineplot
+sns.lineplot(data=results_df, x='controlled', y='d_prime', hue='participant', palette=PT_COLORS, marker='o', linewidth=2, ax=axes[2])
+axes[2].set_title("Per Participant d'")
+axes[2].set_xticks([0, 1])
+axes[2].set_xticklabels(['Uncontrolled', 'Controlled'])
+axes[2].legend(title='Participant', bbox_to_anchor=(1.05, 1), loc='upper left')
+
+plt.tight_layout()
+plt.savefig(PLOT_DIR / "H1_Dprime.png", dpi=300, bbox_inches='tight')
+plt.close()
+print("Saved H1 d' Plots.")
+
+# -----------------------------------------------------------------------------
+# H2: Hit Rate Plots (3-Panel Figure)
+# -----------------------------------------------------------------------------
+results_df['hit_rate'] = results_df['hits'] / (results_df['hits'] + results_df['misses'])
+
+fig, axes = plt.subplots(1, 3, figsize=(15, 5))
+fig.suptitle("Memory Performance (Hit Rate)", fontsize=16)
+
+# 1. Pooled Barplot
+sns.barplot(data=results_df, x='controlled', y='hit_rate', capsize=.1, errorbar='se', palette=ITEM_COLORS, hue='controlled', ax=axes[0])
+axes[0].set_title('Pooled Mean Hit Rate')
+axes[0].set_ylabel("Hit Rate")
+axes[0].set_xticklabels(['Uncontrolled', 'Controlled'])
+
+# 2. Violin Plot
+sns.violinplot(data=results_df, x='controlled', y='hit_rate', inner='point', palette=ITEM_COLORS, hue='controlled', ax=axes[1])
+axes[1].set_title("Distribution of Hit Rate")
+axes[1].set_ylabel("Hit Rate")
+axes[1].set_xticklabels(['Uncontrolled', 'Controlled'])
+
+# 3. Per Participant Lineplot
+sns.lineplot(data=results_df, x='controlled', y='hit_rate', hue='participant', palette=PT_COLORS, marker='o', linewidth=2, ax=axes[2])
+axes[2].set_title("Per Participant Hit Rate")
+axes[2].set_xticks([0, 1])
+axes[2].set_xticklabels(['Uncontrolled', 'Controlled'])
+axes[2].legend(title='Participant', bbox_to_anchor=(1.05, 1), loc='upper left')
+
+plt.tight_layout()
+plt.savefig(PLOT_DIR / "H2_HitRate.png", dpi=300, bbox_inches='tight')
+plt.close()
+print("Saved H2 Hit Rate Plots.")
