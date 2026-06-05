@@ -15,7 +15,7 @@ from mne.preprocessing import read_ica
 # ──────────────────────────────────────────────────────────────
 # Which participant(s) do you want to process?
 # ──────────────────────────────────────────────────────────────
-plist = [3]
+plist = [6]
 
 # ──────────────────────────────────────────────────────────────
 # Component exclusions — fill these in AFTER inspecting the plots; during the second run of the script .
@@ -25,15 +25,19 @@ plist = [3]
 # participant; the script will then show the inspection plots.
 # ──────────────────────────────────────────────────────────────
 component_exclusions = {
-   # 2: [0, 1],
-    3: [0, 1],   # e.g. change to [0, 2] once you've inspected
+    2: [0, 1, 2],
+    3: [0, 1],
+    4: [0, 1],
+    5: [0, 1, 2, 3],  
+    6: [0, 1], 
+    7: [0,1]
 }
 
 # ──────────────────────────────────────────────────────────────
 # Bad channels per participant 
 # ──────────────────────────────────────────────────────────────
 bad_channels = {
-    #31: ['P2'],
+    7: ['P2'],
 }
 
 
@@ -224,7 +228,10 @@ for sub in plist:
             import json
             noiserate = {}
         noiserate[str(sub)] = {
-            "exclusion_rate": pct_dropped,
+            "n_trials_before": n_before,
+            "n_trials_dropped": n_dropped,
+            "pct_trials_dropped": pct_dropped,
+            "quality": quality,
             "excluded_components": excl,
             "bad_channels": bad_channels.get(sub, [])
         }
