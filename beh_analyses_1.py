@@ -178,7 +178,7 @@ model_data['item_type_c'] = np.where(model_data['mem_ground_truth'] == 'seen', 0
 
 # Predictor 3: Detection Accuracy
 model_data['detection_accuracy_c'] = np.where(model_data['detection_accuracy'] == 1, 0.5, 
-                                     np.where(model_data['detection_accuracy'] == 0, -0.5, np.nan))
+                                     np.where(model_data['detection_accuracy'] == 0, -0.5, 0))
 
 # --- 4. Compute d-prime (Now calculating based on High vs Low Control) ---
 def compute_d_prime(hits, misses, false_alarms, correct_rejections):
@@ -232,14 +232,15 @@ print("\n--- RQ1 Analysis A: Binomial GLMM (said_old ~ item_type * control) ---"
 rq1_bin = glmer("said_old_int ~ item_type_c * control_c + (1 | participant)", data=model_data_pl, family="binomial")
 rq1_bin.fit()
 print(rq1_bin.result_fit)
+print("\n--- Random Effects (Participant Variability) ---")
+print(rq1_bin.ranef_var) 
 
 print("\n--- RQ1 Analysis B: Gaussian LMM (log_RT ~ item_type * control) ---")
 rq1_rt = lmer("log_mem_rt ~ item_type_c * control_c + (1 | participant)", data=model_data_pl)
 rq1_rt.fit()
 print(rq1_rt.result_fit)
 
-rq2_data = model_data[(model_data['mem_ground_truth'] == 'seen')].dropna(subset=['detection_accuracy_c']).copy()
-rq2_data_pl = pl.DataFrame(rq2_data)
+rq2_data_pl = pl.DataFrame(model_data)
 
 print("\n--- RQ2 Analysis C: Binomial GLMM (3-Way Interaction) ---")
 rq2_formula_bin = "said_old_int ~ detection_accuracy_c * control_c * item_type_c + (1 | participant)"
