@@ -14,7 +14,7 @@ sys.stdout.reconfigure(encoding='utf-8')
 # ──────────────────────────────────────────────────────────────
 # Which participant(s) do you want to process?
 # ──────────────────────────────────────────────────────────────
-plist = [4, 5, 6, 7, 8, 9, 10, 12, 13, 14, 15, 16, 17, 19, 20]
+plist = [4, 5, 6, 7, 8, 9, 10, 12, 13, 14, 15, 16, 17, 19, 20, 21]
 
 # ──────────────────────────────────────────────────────────────
 # Paths
@@ -83,6 +83,21 @@ save_to = os.path.join(os.getcwd(), "eeg5_figures")
 os.makedirs(save_to, exist_ok=True)
 
 # ──────────────────────────────────────────────────────────────
+# Helper: extract time indices from an MNE cluster object
+# ──────────────────────────────────────────────────────────────
+def _get_cluster_inds(cluster):
+    """Return a 1-D integer array of time-point indices for *cluster*."""
+    if isinstance(cluster, tuple):
+        obj = cluster[0]
+        if isinstance(obj, slice):
+            return np.arange(obj.start, obj.stop)
+        else:
+            return np.asarray(obj).ravel()
+    if isinstance(cluster, np.ndarray) and cluster.dtype == bool:
+        return np.flatnonzero(cluster)
+    return np.flatnonzero(np.asarray(cluster))
+
+# ──────────────────────────────────────────────────────────────
 # Helper function to run permutation test & plot/save results
 # ──────────────────────────────────────────────────────────────
 def run_permutation_test(X_condA, X_condB, label_A, label_B, title, save_filename, colors, linestyles, p_indices):
@@ -101,7 +116,6 @@ def run_permutation_test(X_condA, X_condB, label_A, label_B, title, save_filenam
         X_diff, 
         n_permutations=n_permutations, 
         tail=0,             # two-sided
-        out_type='mask',    # returns boolean mask for clusters
         n_jobs=-1,
         seed=42
     )
@@ -114,29 +128,38 @@ def run_permutation_test(X_condA, X_condB, label_A, label_B, title, save_filenam
     
     print(f"\nRESULTS FOR: {title}")
     print(f"----------------------------------------")
+    print(f"Total clusters found: {len(clusters)}")
+    print(f"Significant clusters (p < {alpha}): {len(good_cluster_inds)}")
+    print(f"----------------------------------------")
     
-    if len(good_cluster_inds) == 0:
-        print(f"No significant clusters found (alpha = {alpha}).")
-    else:
-        print(f"Found {len(good_cluster_inds)} significant cluster(s) (alpha = {alpha}):\n")
-        for i_clu, clu_idx in enumerate(good_cluster_inds):
-            time_inds = np.where(clusters[clu_idx])[0]
-            c_tmin = t_axis[time_inds[0]]
-            c_tmax = t_axis[time_inds[-1]]
-            p_val  = cluster_p_values[clu_idx]
-            avg_T = np.mean(T_obs[time_inds])
-            direction = "Positive" if avg_T > 0 else "Negative"
-            print(f"  Cluster {i_clu+1}: {direction} cluster from {c_tmin:.3f} s to {c_tmax:.3f} s  (p = {p_val:.4f})")
-            
-            # Print Cohen's d and statistics
-            cluster_diff_data = X_diff[:, time_inds]
-            participant_mean_diff = np.mean(cluster_diff_data, axis=1)
-            mean_diff = np.mean(participant_mean_diff)
-            std_diff = np.std(participant_mean_diff, ddof=1)
-            cohens_d = mean_diff / std_diff if std_diff > 0 else np.nan
-            print(f"    Mean difference: {mean_diff:8.4f} µV")
-            print(f"    SD difference:   {std_diff:8.4f} µV")
-            print(f"    Cohen's d:       {cohens_d:8.4f}")
+    for i_clu in range(len(clusters)):
+        time_inds = _get_cluster_inds(clusters[i_clu])
+        c_tmin = t_axis[time_inds[0]]
+        c_tmax = t_axis[time_inds[-1]]
+        p_val  = cluster_p_values[i_clu]
+        avg_T = np.mean(T_obs[time_inds])
+        sum_T = np.sum(T_obs[time_inds])
+        direction = "Positive" if avg_T > 0 else "Negative"
+        sig_marker = " ★ SIGNIFICANT" if p_val < alpha else ""
+        
+        # Compute Cohen's d and statistics for every cluster
+        cluster_diff_data = X_diff[:, time_inds]
+        participant_mean_diff = np.mean(cluster_diff_data, axis=1)
+        mean_diff = np.mean(participant_mean_diff)
+        std_diff = np.std(participant_mean_diff, ddof=1)
+        cohens_d = mean_diff / std_diff if std_diff > 0 else np.nan
+        
+        print(f"\n  Cluster {i_clu+1}: {direction} cluster from {c_tmin:.3f} s to {c_tmax:.3f} s  "
+              f"(p = {p_val:.4f}){sig_marker}")
+        print(f"    n_timepoints:    {len(time_inds)}")
+        print(f"    Mean T-obs:      {avg_T:8.4f}")
+        print(f"    Sum T-obs:       {sum_T:8.4f}")
+        print(f"    Mean difference: {mean_diff:8.4f} µV")
+        print(f"    SD difference:   {std_diff:8.4f} µV")
+        print(f"    Cohen's d:       {cohens_d:8.4f}")
+    
+    if len(clusters) == 0:
+        print(f"\n  No clusters found at all.")
             
     # Plotting Setup
     fontsz = 14
@@ -166,7 +189,7 @@ def run_permutation_test(X_condA, X_condB, label_A, label_B, title, save_filenam
         
     # Fill area of significant clusters with light grey
     for i_clu, clu_idx in enumerate(good_cluster_inds):
-        time_inds = np.where(clusters[clu_idx])[0]
+        time_inds = _get_cluster_inds(clusters[clu_idx])
         c_tmin = t_axis[time_inds[0]]
         c_tmax = t_axis[time_inds[-1]]
         
