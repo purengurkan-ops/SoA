@@ -10,7 +10,7 @@ sys.stdout.reconfigure(encoding='utf-8')
 # ──────────────────────────────────────────────────────────────
 # Which participant(s) do you want to process? - REMEMBER TO REMOVE LOW TRIAL COUNT PARTICIPANTS 
 # ──────────────────────────────────────────────────────────────
-plist = [4, 5, 6, 7, 8, 9, 10, 12, 13, 14, 15, 16, 17, 19, 20]
+plist = [4, 5, 6, 7, 8, 9, 10, 12, 13, 14, 15, 16, 17, 19, 20, 21,22]py
 
 # ──────────────────────────────────────────────────────────────
 # Paths
@@ -195,7 +195,7 @@ for cond_idx, cond_label in enumerate(cond_names):
                       color=colors[cond_idx])
 
     H1.append(h)
-save_name = '00_lineplot_main_effects.svg'
+save_name = '00_lineplot_main_effects.png'
 
 
 # ── Formatting ────────────────────────────────────────────────
@@ -204,12 +204,17 @@ save_name = '00_lineplot_main_effects.svg'
 ax1.legend(H1, labels, loc='best', fontsize=font_size)
 ax1.set_ylim(ylimits)
 ax1.invert_yaxis()           # EEG convention: negative up
+
+# Highlight significant time window
+ax1.fill_between([0.424, 0.500], ylimits[0], ylimits[1], color=[0.7, 0.7, 0.7], alpha=0.5, edgecolor='none')
+
 ax1.axhline(0, color='black', linestyle='--', linewidth=0.5)
 ax1.axvline(0, color='black', linestyle='--', linewidth=0.5)
 
+ax1.set_xlim([-0.3, 1.2])
 ax1.set_xlabel('Time (s)', fontsize=font_size)
 ax1.set_ylabel('µV', fontsize=font_size)
-ax1.set_xticks(np.arange(0, times[-1] + 0.01, 0.1)) 
+ax1.set_xticks(np.arange(-0.3, 1.21, 0.1)) 
 ax1.tick_params(labelsize=font_size, width=1)
 for spine in ax1.spines.values():
     spine.set_linewidth(1)
@@ -230,7 +235,7 @@ plt.tight_layout()
 # FieldTrip: print(gcf, '-dsvg', [save_to '00_lineplot_...'], dpi)
 # dpi=600 matches FieldTrip's -r600; SVG is vector so DPI mainly affects rasterised elements.
 save_path = os.path.join(save_to, save_name)
-fig1.savefig(save_path, format='svg', dpi=600, bbox_inches='tight',
+fig1.savefig(save_path, format='png', dpi=600, bbox_inches='tight',
              facecolor='white')
 print(f"\n  Figure saved: {save_path}")
 
@@ -248,8 +253,7 @@ topo_cmap = plt.cm.RdBu_r
 # Color limits matching FieldTrip: cfg.zlim = [-1.5 1.5]   (µV)
 # Adjust these if needed for visibility.
 # topo_vlim = (-1.5, 1.5)   # in µV — will be converted to Volts for MNE
-topo_vlim = (-3, 3)   # seems like we have positive activity more than 1.5 µV in a condition, so changed this way. 
-
+topo_vlim = (-1.5, 1.5)   # Set to -1.5, 1.5 to match the requested legend
 
 # Figure size: FieldTrip PaperPosition [0 0 8 8] (cm) → 8×8 cm per topo
 topo_fig_in = 8 / 2.54   # ~3.15 inches
@@ -275,32 +279,37 @@ topo_prefix = '00_topo_main_effects'
 for cond_idx, cond_label in enumerate(cond_names):
     evoked_topo = GA_dat[cond_label].copy()
     evoked_topo.crop(tmin=t_min, tmax=t_max)
-    topo_data = evoked_topo.data.mean(axis=1)   # [n_channels] in Volts
+    topo_data = evoked_topo.data.mean(axis=1) * 1e6  # [n_channels] in µV
 
-    fig_topo, ax_topo = plt.subplots(figsize=(topo_fig_in, topo_fig_in))
+    fig_topo, ax_topo = plt.subplots(figsize=(topo_fig_in + 1.0, topo_fig_in))
 
     highlight_mask = make_highlight_mask(evoked_topo, picked_channels)
-    mne.viz.plot_topomap(
+    im, _ = mne.viz.plot_topomap(
         topo_data, evoked_topo.info,
         axes=ax_topo,
         cmap=topo_cmap,
-        vlim=(topo_vlim[0] * 1e-6, topo_vlim[1] * 1e-6),   # µV → V
+        vlim=topo_vlim,   # µV
         mask=highlight_mask,
         mask_params=mask_params,
         show=False,
         contours=6,
     )
 
+    cbar = fig_topo.colorbar(im, ax=ax_topo, shrink=0.8, pad=0.05)
+    cbar.set_label('Voltage (µV)', fontsize=14)
+    cbar.set_ticks([topo_vlim[0], 0, topo_vlim[1]])
+    cbar.ax.tick_params(labelsize=14)
+
     ax_topo.set_title(topo_labels[cond_idx], fontsize=12)
     fig_topo.patch.set_facecolor('white')
     fig_topo.tight_layout()
 
-    # Save as SVG and TIFF
-    for fmt in ['svg', 'tiff']:
+    # Save as PNG
+    for fmt in ['png']:
         topo_save = os.path.join(save_to, f"{topo_prefix}_{cond_label}.{fmt}")
         fig_topo.savefig(topo_save, format=fmt, dpi=600,
                          bbox_inches='tight', facecolor='white')
-    print(f"  Topo saved: {topo_prefix}_{cond_label} (.svg + .tiff)")
+    print(f"  Topo saved: {topo_prefix}_{cond_label} (.png)")
 
 plt.show()   # display main-effect figures interactively; close windows to continue
 

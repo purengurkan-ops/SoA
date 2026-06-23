@@ -14,7 +14,7 @@ sys.stdout.reconfigure(encoding='utf-8')
 # ──────────────────────────────────────────────────────────────
 # Which participant(s) do you want to process?
 # ──────────────────────────────────────────────────────────────
-plist = [4, 5, 6, 7, 8, 9, 10, 12, 13, 14, 15, 16, 17, 19, 20, 21]
+plist = [4, 5, 6, 7, 8, 9, 10, 12, 13, 14, 15, 16, 17, 19, 20, 21,22]
 
 # ──────────────────────────────────────────────────────────────
 # Paths
@@ -48,7 +48,7 @@ for p_idx, pnum in enumerate(plist):
 # elec_include = ['FCz', 'Cz', 'CPz', 'Pz']  # (Wen et al., 2017)
 elec_include = ['Fz', 'FCz', 'FC1', 'FC2']  # our topoplots show rather frontal activity, so we change to these electrodes following Giersiepen et al., 2024, 2025
 # time_include = [0.45, 0.65]  # P500 window (Wen et al., 2017)
-time_include = [0, 1]  # P500 window (Wen et al., 2017)
+time_include = [-0.3, 1.2]  # P500 window (Wen et al., 2017)
 
 # Get shared time axis from first loaded participant
 t_axis = None
@@ -139,7 +139,7 @@ def run_permutation_test(X_condA, X_condB, label_A, label_B, title, save_filenam
         p_val  = cluster_p_values[i_clu]
         avg_T = np.mean(T_obs[time_inds])
         sum_T = np.sum(T_obs[time_inds])
-        direction = "Positive" if avg_T > 0 else "Negative"
+        direction = "Negative" if avg_T > 0 else "Positive"
         sig_marker = " ★ SIGNIFICANT" if p_val < alpha else ""
         
         # Compute Cohen's d and statistics for every cluster
@@ -215,7 +215,7 @@ def run_permutation_test(X_condA, X_condB, label_A, label_B, title, save_filenam
     plt.tight_layout()
     
     save_path = os.path.join(save_to, save_filename)
-    fig.savefig(save_path, format='svg', dpi=600, bbox_inches='tight', facecolor='white')
+    fig.savefig(save_path, format='png', dpi=600, bbox_inches='tight', facecolor='white')
     print(f"Figure saved to: {save_path}")
     print("----------------------------------------")
 
@@ -233,7 +233,7 @@ run_permutation_test(
     label_A='High Control', 
     label_B='Low Control', 
     title='Main Effect of Condition (High vs. Low Control)', 
-    save_filename='01_permut_main_effect_condition.svg', 
+    save_filename='01_permut_main_effect_condition.png', 
     colors=['blue', 'red'], 
     linestyles=['-', '-'],
     p_indices=subs_test1
