@@ -198,7 +198,7 @@ def run_permutation_test(X_condA, X_condB, label_A, label_B, title, save_filenam
     print(f"\n{final_text}")
     
     # Save the text to a file
-    txt_filename = save_filename.replace('.svg', '.txt')
+    txt_filename = save_filename.replace('.png', '.txt')
     txt_filepath = os.path.join(save_to, txt_filename)
     with open(txt_filepath, 'w', encoding='utf-8') as f:
         f.write(final_text)
@@ -265,7 +265,7 @@ def run_permutation_test(X_condA, X_condB, label_A, label_B, title, save_filenam
     plt.tight_layout()
     
     save_path = os.path.join(save_to, save_filename)
-    fig.savefig(save_path, format='svg', dpi=600, bbox_inches='tight', facecolor='white')
+    fig.savefig(save_path, format='png', dpi=600, bbox_inches='tight', facecolor='white')
     print(f"Figure saved to: {save_path}")
     print("----------------------------------------")
 
@@ -298,10 +298,9 @@ def run_permutation_test(X_condA, X_condB, label_A, label_B, title, save_filenam
                 fig_t.patch.set_facecolor('white')
                 fig_t.tight_layout()
                 
-                topo_name = save_filename.replace('.svg', f'_topo_cluster{i_clu+1}_{label.replace(" ", "_")}')
-                for fmt in ['svg', 'tiff']:
-                    tsave = os.path.join(save_to, f"{topo_name}.{fmt}")
-                    fig_t.savefig(tsave, format=fmt, dpi=600, bbox_inches='tight', facecolor='white')
+                topo_name = save_filename.replace('.png', f'_topo_cluster{i_clu+1}_{label.replace(" ", "_")}')
+                tsave = os.path.join(save_to, f"{topo_name}.png")
+                fig_t.savefig(tsave, format='png', dpi=600, bbox_inches='tight', facecolor='white')
                 print(f"    Saved: {topo_name}")
 
 
@@ -321,7 +320,7 @@ run_permutation_test(
     label_A='High Control', 
     label_B='Low Control', 
     title='Main Effect of Condition (High vs. Low Control)', 
-    save_filename='01_permut_main_effect_condition.svg', 
+    save_filename='01_permut_main_effect_condition.png', 
     colors=[(0.00, 0.44, 0.69), (0.80, 0.47, 0.65)], 
     linestyles=['-', '-'],
     p_indices=subs_test1,
