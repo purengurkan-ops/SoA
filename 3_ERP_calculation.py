@@ -11,13 +11,14 @@ sys.stdout.reconfigure(encoding='utf-8')
 # ──────────────────────────────────────────────────────────────
 # Which participant(s) do you want to process?
 # ──────────────────────────────────────────────────────────────
-plist = [22]
+
+plist = [4,6,7,8,9,10,12,13,14,15,16,17,19,20,21,22]
 
 
-# Paths
-eeg_path = r"H:\PHD\control_detection\main_data\eeg\eeg3_clean"
-log_path = r"H:\PHD\control_detection\main_data\behavioral" # we need to match the trials from the behavioral data to the epochs in the eeg. 
-                                                            # so here we specify the folder where the behavioral files are 
+
+# CHANGE AS NEEDED:
+eeg_path = r"H:\PHD\control_detection\main_data\eeg\eeg3_clean" # clean data is in our CDmem_data cloud
+log_path = r"H:\PHD\control_detection\main_data\behavioral"
 
 # Accumulates one summary dict per participant 
 # so we can do a cross-participant trial-count check after the loop.
@@ -58,14 +59,16 @@ for sub in plist:
 
     # ── 2. Match behavioral and EEG ───────────────────────────
     #
-    # The epochs in the cleaned file are part of the control detection trials that
-    # survived artifact rejection, in chronological order. Their trigger values
-    # are in epochs.events[:,2]. The log has ALL trials in the same chronological
-    # order, with trigger values in logdat.trigger_motion_start (so, the column "trigger_motion_start" in the behavioral files)
+    # The epochs in the cleaned file are the motion-onset-trigger trials that
+    # survived artifact rejection, in chronological order. The log has ALL trials in the same chronological
+    # order, with trigger values.
     #
     # We match by finding which log rows (by their sequential trigger position)
     # correspond to the surviving EEG epochs.
-
+    #
+    # NOTE: epochs.selection is NOT used here because it indexes into the
+    # original all-markers events array (fixations, responses, etc.), not just
+    # the feedback events. Its values are far out of range for logdat.
 
     # Build a reverse map: event_id int -> trigger number (e.g. 99 -> 99)
     event_id_rev = {v: int(k.split('S ')[1]) for k, v in epochs.event_id.items()}
@@ -74,9 +77,10 @@ for sub in plist:
     eeg_triggers = np.array([event_id_rev[e] for e in epochs.events[:, 2]])
 
     # Get the trigger sequence from the full log (chronological order)
-    log_triggers = logdat['trigger_motion_start'].values 
+    log_triggers = logdat['trigger_motion_start'].values  # shape (352,) for all trials
 
     # Walk through the log and mark which rows have a matching EEG trigger
+    
     eeg_idx = 0  # pointer into eeg_triggers
     log_survived = np.zeros(len(logdat), dtype=bool)
 
@@ -94,16 +98,11 @@ for sub in plist:
     logdat = logdat[log_survived].copy()
     print(f"  Trials surviving preprocessing: {len(logdat)}")
 
-    # ── 3. Filter for relevant trials ───────────────────────
-    #  We filterfor correct agency responses only, following Wen et al. 2017. 
-    is_correct_agency = (logdat['detection_accuracy'] == 1)
-    logdat = logdat[is_correct_agency].copy()
-    epochs = epochs[is_correct_agency.values]
-    print(f"  Trials after agency filtering: {len(logdat)} (Behavioral == EEG: {len(logdat) == len(epochs)})")
+   
 
-    # ── 4. Sanity Check: Match Triggers ────────────────────
+    # ── 3. Sanity Check: Match Triggers ────────────────────
     # Compare logdat.trigger_motion_start with epochs.events[:, 2]
-    # We need to reverse the mapping or check the values.
+    
     # Let's find the values MNE used for these triggers.
     event_id_rev = {v: k for k, v in epochs.event_id.items()}
     
@@ -122,26 +121,25 @@ for sub in plist:
     if not mismatch_found:
         print(f"  ✓ Sanity Check passed: Logfile and EEG triggers match!")
 
-    # ── 5. Narrow time window ──────────────────────────────
+    # ── 4. Narrow time window ──────────────────────────────
     # Following Wen et al., 2017
     epochs.crop(tmin=-0.30, tmax=1.20)
     print(f"  ✓ EEG cropped to window: [-0.30, 1.20] s")
 
-    # ── 6. ERP analysis per condition ─────────────────────
-    #
+    # ── 5. ERP analysis per condition ─────────────────────
     # Conditions: control_condition
     #   control_condition  'high' = high control   'low' = low control
     # → 2 conditions total: high_control, low_control
 
     # Output folder — create it if it doesn't exist
-    erp_out_path = os.path.join(os.getcwd(), "eeg4_ERPSummaries")
+    erp_out_path = r"H:\PHD\control_detection\main_data\eeg\eeg4_ERPSummaries"
     os.makedirs(erp_out_path, exist_ok=True)
 
     # We need a reset positional index on logdat so boolean masks align with
-    # epochs 
+    # epochs (which are already in the same order after HV filtering above).
     logdat_reset = logdat.reset_index(drop=True)
 
-    eeg_dat   = {}   # dict of condition_name → mne.Evoked  
+    eeg_dat   = {}   # dict of condition_name → mne.Evoked     
     cond_name = []   # list of condition label strings       
     summary   = {'sub': sub}  # trial counts per condition  
 
@@ -159,7 +157,6 @@ for sub in plist:
         n_trials = mask.sum()
 
         # Store trial count in summary
-        # FieldTrip: summary.(['num_' cond_name{cnum}]) = sum(cfgerp.trials);
         summary[f"num_{label}"] = int(n_trials)
 
         if n_trials == 0:
@@ -167,9 +164,7 @@ for sub in plist:
             eeg_dat[label] = None
             continue
 
-        # This where the actual ERP is calculated!!
-        # .average() averages the EEG signal across all trials at each time point and channel,
-        # giving us the mean waveform (ERP) per channel for this condition.
+        # Select the matching epochs and average across trials → Evoked object
         epochs_cond = epochs[mask.values]
         evoked = epochs_cond.average()
         evoked.comment = label   # label the Evoked so it's identifiable when saved
@@ -177,11 +172,9 @@ for sub in plist:
 
         print(f"  [{label}]  {n_trials} trials  →  ERP computed")
 
-    # ── 7. Save ERP results ───────────────────────────────
-    # In MNE, Evoked objects are saved as FIF files (one per participant, containing
-    # both conditions). The summary dict is saved separately as a CSV.
+    # ── 6. Save ERP results ───────────────────────────────
 
-    # Save both Evoked objects in a single FIF file (one file per participant)
+    # Save all 4 Evoked objects in a single FIF file (one file per participant)
     evoked_list = [ev for ev in eeg_dat.values() if ev is not None]
     evoked_file = os.path.join(erp_out_path, f"CDmem_{sub_id}-erp-ave.fif")
     mne.write_evokeds(evoked_file, evoked_list, overwrite=True, verbose=False)
@@ -196,13 +189,11 @@ for sub in plist:
           f"{ {k: summary[f'num_{k}'] for k in cond_name} }")
 
     # Append this participant's summary to the cross-participant list
-    # FieldTrip: behavSummary = [behavSummary summary];
     all_summaries.append(summary)
-
 
 print("\nAll selected participants processed.")
 
-# ── EXCLUSION: Cross-participant trial-count check ───────────────────────
+# ── Cross-participant trial-count check ───────────────────────
 
 # Identifies any participant who has fewer than 25 trials in at least one
 # experimental condition — these may need to be excluded from group analysis.
@@ -212,6 +203,7 @@ if all_summaries:
     summary_df = pd.DataFrame(all_summaries)  # one row per participant
 
     # Condition columns only (exclude 'sub' identifier column)
+
     cond_cols = [c for c in summary_df.columns if c.startswith('num_')]
     trial_counts = summary_df[cond_cols]
 
@@ -223,12 +215,14 @@ if all_summaries:
     print(f"\n{'='*60}")
     print(f"  TRIAL COUNT CHECK  (threshold: < {THRESHOLD} trials per condition)")
     print(f"{'='*60}")
+    
     print(f"  Participants with < {THRESHOLD} trials in >= 1 condition: {num_flagged}")
 
     if num_flagged == 0:
         print("  All participants meet the minimum trial threshold.")
     else:
-        print("  REMOVE FROM BEHAVIORAL & FURTHER EEG ANALYSES:")
+        
+        print("  Flagged participant(s):")
         for psub in flagged_subs:
             psub_id = f"{psub:04d}"
             row = summary_df.loc[summary_df['sub'] == psub, cond_cols].iloc[0]

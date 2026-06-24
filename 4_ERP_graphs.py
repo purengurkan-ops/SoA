@@ -8,17 +8,19 @@ import mne
 sys.stdout.reconfigure(encoding='utf-8')
 
 # ──────────────────────────────────────────────────────────────
-# Which participant(s) do you want to process? - REMEMBER TO REMOVE LOW TRIAL COUNT PARTICIPANTS 
+# Which participant(s) do you want to process?
 # ──────────────────────────────────────────────────────────────
-plist = [4, 5, 6, 7, 8, 9, 10, 12, 13, 14, 15, 16, 17, 19, 20, 21,22]py
+plist = [4, 6, 7, 8, 9, 10, 12, 13, 14, 15, 16, 17, 19, 20, 21,22]
 
 # ──────────────────────────────────────────────────────────────
 # Paths
 # ──────────────────────────────────────────────────────────────
-dfolder = os.path.join(os.getcwd(), "eeg4_ERPSummaries")
+
+dfolder = r"H:\PHD\control_detection\main_data\eeg\eeg4_ERPSummaries"
 
 # Path for saving figures
-save_to = os.path.join(os.getcwd(), "eeg5_figures")
+
+save_to = r"H:\PHD\control_detection\main_data\eeg\eeg5_figures"
 os.makedirs(save_to, exist_ok=True)
 
 # ──────────────────────────────────────────────────────────────
@@ -26,9 +28,9 @@ os.makedirs(save_to, exist_ok=True)
 # ──────────────────────────────────────────────────────────────
 
 # electrodes_select = ['FCz', 'Cz', 'CPz', 'Pz']  # (Wen et al., 2017)
-electrodes_select = ['Fz', 'FCz', 'FC1', 'FC2']  # (data-driven electrode selection - seems like positive voltage activity is more frontal in our case, following Giersiepen et al., 2024, 2025)
+electrodes_select = ['Fz', 'FCz', 'FC1', 'FC2']  # (following Giersiepen et al., 2024, 2025)
 
-# Time window for P500 analysis and topoplots. 450-650 ms after movement onset (Wen et al., 2017)
+# Time window for P500 analysis and topoplots (Wen et al., 2017)
 time_select = [0.45, 0.65]
 
 # ──────────────────────────────────────────────────────────────
@@ -39,15 +41,15 @@ cond_names = ['high_control', 'low_control']
 
 # ──────────────────────────────────────────────────────────────
 # Load data for all participants + build grand-average structures
-# ─────────────────────────────────────────────────────────────
-#
+# ──────────────────────────────────────────────────────────────
+
 # In MNE, mne.read_evokeds() loads the FIF saved by ERP_calculation.py.
-# Each file contains both Evoked objects (one per condition), identified
-# by their .comment attribute (set to the condition label in 3_ERP_calculation.py).
+# Each file contains all 2 Evoked objects (one per condition), identified
+# by their .comment attribute (set to the condition label in ERP_calculation.py).
 
 # alleeg[p][cond_label] → Evoked for participant p, condition cond_label
-alleeg       = {}   
-all_summaries = []   
+alleeg       = {}   # FieldTrip: alleeg{p, cond}
+all_summaries = []   # FieldTrip: behavSummary
 
 for p_idx, pnum in enumerate(plist):
     sub_id = f"{pnum:04d}"
@@ -61,19 +63,20 @@ for p_idx, pnum in enumerate(plist):
     print(f"Loading participant {pnum}")
 
     # Load all Evoked objects for this participant
+    
     evoked_list = mne.read_evokeds(erp_file, verbose=False)
 
-    # Index by condition label (stored in evoked.comment during 3_ERP_calculation.py)
+    # Index by condition label (stored in evoked.comment during ERP_calculation.py)
     alleeg[p_idx] = {ev.comment: ev for ev in evoked_list}
 
     # Load trial-count summary
+
     if os.path.exists(csv_file):
         summary_row = pd.read_csv(csv_file).iloc[0].to_dict()
         all_summaries.append(summary_row)
 
-    # ─────────────────────────────────────────────────────────────
-
 # Print behavioral summary table across participants
+
 if all_summaries:
     print("\nBehavioral summary (trial counts per condition):")
     print(pd.DataFrame(all_summaries).to_string(index=False))
@@ -81,11 +84,11 @@ if all_summaries:
 # ──────────────────────────────────────────────────────────────
 # Grand averages across participants
 # ──────────────────────────────────────────────────────────────
+#
 # MNE: mne.grand_average() averages across a list of Evoked objects.
-# It normalizes by number of trials under the hood
-
+# It normalizes by number of trials under the hood 
 print("\nComputing grand averages...")
-GA_dat = {}   
+GA_dat = {}   # FieldTrip: GA_dat{cond}
 
 for cond_label in cond_names:
     # Collect this condition's Evoked across all loaded participants
@@ -104,6 +107,7 @@ print(f"  Time window         : {time_select[0]:.2f} - {time_select[1]:.2f} s")
 # ──────────────────────────────────────────────────────────────
 # Average activity across electrodes per participant / condition
 # ──────────────────────────────────────────────────────────────
+#
 # In MNE, evoked.data has shape [n_channels, n_timepoints] in Volts.
 # We pick() the selected electrodes, then average across channels to get
 # one time series per participant × condition.  Multiply by 1e6 → µV.
@@ -112,11 +116,12 @@ import matplotlib
 matplotlib.use('TkAgg')   # interactive window; change to 'Agg' for headless/batch saving only
 import matplotlib.pyplot as plt
 
-loaded_plist = list(alleeg.keys()) # participant indices that were successfully loaded
+loaded_plist = list(alleeg.keys())           # participant indices that were successfully loaded
 n_participants = len(loaded_plist)
 
 # Get shared time axis (same for all participants / conditions)
-times = alleeg[loaded_plist[0]][cond_names[0]].times # in seconds
+# FieldTrip: x = avg_subj.time;
+times = alleeg[loaded_plist[0]][cond_names[0]].times   # in seconds
 
 # Verify that all requested electrodes actually exist in the data
 available_ch = alleeg[loaded_plist[0]][cond_names[0]].ch_names
@@ -128,7 +133,7 @@ print(f"  Using electrodes: {picked_channels}")
 
 n_timepoints = len(times)
 
-# ──  pMeanList ──────────────────────────────
+# ── Non-difference wave pMeanList ──────────────────────────────
 pMeanList = np.zeros((n_participants, num_cond, n_timepoints))   # [P, C, T]
 
 for p_idx, p_key in enumerate(loaded_plist):
@@ -140,8 +145,6 @@ for p_idx, p_key in enumerate(loaded_plist):
 
 # ── Compute grandMean / subjMean for error-bar correction ──────
 
-# grandMean is used only in the Cousineau-Morey within-subject error correction
-# (see plotting loops below). For single-participant plots there are no error bars.
 
 if n_participants == 1:
     grandMean = np.squeeze(np.mean(pMeanList, axis=1))   # [T]
@@ -161,11 +164,11 @@ colors      = [[0, 0.44, 0.69], [0.8, 0.47, 0.65]]
 linestyles  = ['-', '-']   
 linecol_colors = ['blue', 'magenta']
 
-# Figure dimensions
+# Figure dimensions matching FieldTrip's PaperPosition [0 0 30 20] (cm)
 fig_w_cm, fig_h_cm = 30, 20
 fig_w_in = fig_w_cm / 2.54
 fig_h_in = fig_h_cm / 2.54
-font_size = 20   
+font_size = 20   # FieldTrip: fontsz = 20
 
 plt.close('all')
 
@@ -176,7 +179,7 @@ fig1, ax1 = plt.subplots(figsize=(fig_w_in, fig_h_in))
 
 H1 = []
 
-# ──Main Effect of Control: 2 conditions ───────────────────
+# ── Non-difference wave: 2 conditions ───────────────────
 labels = ['High Control', 'Low Control']
 for cond_idx, cond_label in enumerate(cond_names):
     y = pMeanList[:, cond_idx, :]   # [P, T]
@@ -195,7 +198,7 @@ for cond_idx, cond_label in enumerate(cond_names):
                       color=colors[cond_idx])
 
     H1.append(h)
-save_name = '00_lineplot_main_effects.png'
+save_name = '00_lineplot_main_effects.svg'
 
 
 # ── Formatting ────────────────────────────────────────────────
@@ -204,24 +207,22 @@ save_name = '00_lineplot_main_effects.png'
 ax1.legend(H1, labels, loc='best', fontsize=font_size)
 ax1.set_ylim(ylimits)
 ax1.invert_yaxis()           # EEG convention: negative up
-
-# Highlight significant time window
-ax1.fill_between([0.424, 0.500], ylimits[0], ylimits[1], color=[0.7, 0.7, 0.7], alpha=0.5, edgecolor='none')
-
 ax1.axhline(0, color='black', linestyle='--', linewidth=0.5)
 ax1.axvline(0, color='black', linestyle='--', linewidth=0.5)
 
-ax1.set_xlim([-0.3, 1.2])
 ax1.set_xlabel('Time (s)', fontsize=font_size)
 ax1.set_ylabel('µV', fontsize=font_size)
-ax1.set_xticks(np.arange(-0.3, 1.21, 0.1)) 
+ax1.set_xticks(np.arange(-0.3, 1.2 + 0.01, 0.1))
 ax1.tick_params(labelsize=font_size, width=1)
 for spine in ax1.spines.values():
     spine.set_linewidth(1)
+
+
 try:
     plt.rcParams['font.family'] = 'Times New Roman'
 except Exception:
-    pass   # fall back to matplotlib default if font not installed
+    pass   
+
 
 fig1.patch.set_facecolor('white')
 ax1.set_facecolor('white')
@@ -232,84 +233,83 @@ ax1.set_title('')
 plt.tight_layout()
 
 # ── Save figure ───────────────────────────────────────────────
-# FieldTrip: print(gcf, '-dsvg', [save_to '00_lineplot_...'], dpi)
-# dpi=600 matches FieldTrip's -r600; SVG is vector so DPI mainly affects rasterised elements.
+
 save_path = os.path.join(save_to, save_name)
-fig1.savefig(save_path, format='png', dpi=600, bbox_inches='tight',
+fig1.savefig(save_path, format='svg', dpi=600, bbox_inches='tight',
              facecolor='white')
 print(f"\n  Figure saved: {save_path}")
 
 # ──────────────────────────────────────────────────────────────
 # Topographical Plots
 # ──────────────────────────────────────────────────────────────
+
 #
 # In MNE, we use the `mask` parameter of plot_topomap() to highlight
 # the selected electrodes (equivalent to cfg.highlightchannel).
 # MNE handles the 2D projection internally so positions always match.
 
+
 # matplotlib's 'RdBu_r' is the reversed version (blue for negative, red for positive).
 topo_cmap = plt.cm.RdBu_r
 
-# Color limits matching FieldTrip: cfg.zlim = [-1.5 1.5]   (µV)
+
 # Adjust these if needed for visibility.
-# topo_vlim = (-1.5, 1.5)   # in µV — will be converted to Volts for MNE
-topo_vlim = (-1.5, 1.5)   # Set to -1.5, 1.5 to match the requested legend
+topo_vlim = (-1.5, 1.5)   # in µV — will be converted to Volts for MNE
+
 
 # Figure size: FieldTrip PaperPosition [0 0 8 8] (cm) → 8×8 cm per topo
 topo_fig_in = 8 / 2.54   # ~3.15 inches
 
-# Time window for averaging: FieldTrip cfg.xlim = time_select
+# Time window for averaging: 
 t_min, t_max = time_select
 
 # Build a boolean mask for the highlighted electrodes.
+
 # MNE: mask = boolean array [n_channels], True = highlight with mask_params style.
 def make_highlight_mask(evoked, highlight_names):
     """Return a boolean array (n_channels,) — True for channels to highlight."""
     mask = np.array([ch in highlight_names for ch in evoked.ch_names])
     return mask
 
-# Style for highlighted channels
+# Style for highlighted channels 
 mask_params = dict(marker='*', markerfacecolor='black', markeredgecolor='black',
                    markersize=10, zorder=10)
 
-# ──Main Effect of Condition: one topo per condition ──────────
+# ── Non-difference wave: one topo per condition ──────────
 topo_labels = ['High Control', 'Low Control']
 topo_prefix = '00_topo_main_effects'
 
 for cond_idx, cond_label in enumerate(cond_names):
     evoked_topo = GA_dat[cond_label].copy()
     evoked_topo.crop(tmin=t_min, tmax=t_max)
-    topo_data = evoked_topo.data.mean(axis=1) * 1e6  # [n_channels] in µV
+    topo_data = evoked_topo.data.mean(axis=1)   # [n_channels] in Volts
 
-    fig_topo, ax_topo = plt.subplots(figsize=(topo_fig_in + 1.0, topo_fig_in))
+    fig_topo, ax_topo = plt.subplots(figsize=(topo_fig_in, topo_fig_in))
 
+    
     highlight_mask = make_highlight_mask(evoked_topo, picked_channels)
-    im, _ = mne.viz.plot_topomap(
+    mne.viz.plot_topomap(
         topo_data, evoked_topo.info,
         axes=ax_topo,
         cmap=topo_cmap,
-        vlim=topo_vlim,   # µV
+        vlim=(topo_vlim[0] * 1e-6, topo_vlim[1] * 1e-6),   # µV → V
         mask=highlight_mask,
         mask_params=mask_params,
         show=False,
         contours=6,
     )
 
-    cbar = fig_topo.colorbar(im, ax=ax_topo, shrink=0.8, pad=0.05)
-    cbar.set_label('Voltage (µV)', fontsize=14)
-    cbar.set_ticks([topo_vlim[0], 0, topo_vlim[1]])
-    cbar.ax.tick_params(labelsize=14)
-
     ax_topo.set_title(topo_labels[cond_idx], fontsize=12)
     fig_topo.patch.set_facecolor('white')
     fig_topo.tight_layout()
 
-    # Save as PNG
-    for fmt in ['png']:
+    # Save as SVG and TIFF
+   
+    for fmt in ['svg', 'tiff']:
         topo_save = os.path.join(save_to, f"{topo_prefix}_{cond_label}.{fmt}")
         fig_topo.savefig(topo_save, format=fmt, dpi=600,
                          bbox_inches='tight', facecolor='white')
-    print(f"  Topo saved: {topo_prefix}_{cond_label} (.png)")
+    print(f"  Topo saved: {topo_prefix}_{cond_label} (.svg + .tiff)")
 
 plt.show()   # display main-effect figures interactively; close windows to continue
 
