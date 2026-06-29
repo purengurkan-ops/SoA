@@ -21,10 +21,10 @@ print("\n" + "="*40)
 print("PHASE 1: LOADING DATA")
 print("="*40)
 
-DATA_DIR = Path(r"/Users/purengurkan/Desktop/SoA/SoA/CDmem/data/subjects")
+DATA_DIR = Path(r"/Users/purengurkan/Desktop/SoA/SoA/CDmem/data/main_Data")
 OUTPUT_DIR = Path("analysis_output")
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-PARTICIPANT_FILTER = [12, 14, 15, 16, 17]
+PARTICIPANT_FILTER = [4, 6, 7, 8, 9, 10, 12, 13, 14, 15, 16, 17, 19, 20, 21, 22]
 
 # 1A. Load Main Task Data
 all_files = list(DATA_DIR.glob("CDmem_1_*.csv"))
@@ -80,21 +80,26 @@ excluded_acc_pts = pt_acc_merged[pt_acc_merged['is_outlier']]['participant'].uni
 data = data[~data['participant'].isin(excluded_acc_pts)]
 print(f"Criterion 2 (Det Acc > 2.5 SD per condition): Excluded {len(excluded_acc_pts)} participants {excluded_acc_pts}")
 
-# --- Excl 3: Calibration Failure (Main Data) ---
+# --- Excl 3: Calibration Failure (Numerical SD Check) ---
 calib_data = data[data["phase"] == "calibration"].copy()
-calib_data["quest_low_converged"] = calib_data["quest_low_converged"].astype(str).str.strip().str.lower() == "true"
-calib_data["quest_high_converged"] = calib_data["quest_high_converged"].astype(str).str.strip().str.lower() == "true"
-conv_low = calib_data.groupby("participant")["quest_low_converged"].any()
-conv_high = calib_data.groupby("participant")["quest_high_converged"].any()
-convergence_check = pd.DataFrame({"low_converged": conv_low, "high_converged": conv_high}).reset_index()
-failed_calib_rows = convergence_check[(convergence_check["low_converged"] == False) & (convergence_check["high_converged"] == False)]
-excluded_calib_pts = failed_calib_rows["participant"].tolist()
+calib_data['quest_alpha_sd'] = pd.to_numeric(calib_data['quest_alpha_sd'], errors='coerce')
+excluded_calib_pts = []
+px_convergence = {} # To track how many staircases converged per participant to inform future analyses (Excl 5)
+
+for px, px_df in calib_data.groupby("participant"):
+    n_converged = 0
+    for target, target_df in px_df.groupby("calib_target"):
+        if not target_df.empty:
+            final_sd = target_df["quest_alpha_sd"].iloc[-1]
+            if not pd.isna(final_sd) and final_sd < 0.20:
+                n_converged += 1
+    
+    px_convergence[px] = n_converged
+    if n_converged == 0: # If both staircases failed to converge, exclude the participant
+        excluded_calib_pts.append(px)
+
 print(f"Criterion 3 (Calibration Fail): Excluded {len(excluded_calib_pts)} participants {excluded_calib_pts}")
 data = data[~data["participant"].isin(excluded_calib_pts)].copy()
-
-# --- Sync Recognition Data to Main Data (Pre-trimming) ---
-valid_main_participants = data["participant"].unique()
-recog_data = recog_data[recog_data["participant"].isin(valid_main_participants)].copy()
 
 # --- RT Outlier Trimming (Recog Data) ---
 participant_mean_rt = recog_data.groupby("participant")["mem_rt"].transform("mean")
@@ -105,6 +110,50 @@ clean_recog_data = recog_data[valid_trials_mask].copy()
 print(f"RT Trimming: Removed {len(recog_data) - len(clean_recog_data)} trials outside of 3SD.")
 
 print(f"\nFINAL CLEAN SAMPLE: {data['participant'].nunique()} Participants")
+
+# --- Excl 5: Individual Manipulation Failure
+from scipy.stats import ttest_ind
+
+test_data_manip = data[data["phase"] == "test"].copy()
+test_data_manip["detection_accuracy"] = pd.to_numeric(test_data_manip["detection_accuracy"], errors="coerce")
+test_data_manip["agency_rating"] = pd.to_numeric(test_data_manip["agency_rating"], errors="coerce")
+
+excluded_manip = []
+
+for px in sorted(data["participant"].unique()):
+    px_test = test_data_manip[test_data_manip["participant"] == px]
+    high = px_test[px_test["control_condition"] == "high"]
+    low = px_test[px_test["control_condition"] == "low"]
+
+    if len(high) == 0 or len(low) == 0:
+        continue
+
+    acc_diff = high["detection_accuracy"].mean() - low["detection_accuracy"].mean()
+    ag_diff = high["agency_rating"].mean() - low["agency_rating"].mean()
+    both_converged = px_convergence.get(px, 0) == 2
+
+    # (A) If both calibration staircases failed to converge and the differences are in the wrong direction, exclude
+    if acc_diff <= 0 and ag_diff <= 0:
+        excluded_manip.append(px)
+        continue
+
+    # (B) If both calibration staircases converged and the differences are in the correct direction, include
+    if both_converged:
+        continue
+
+    # (C) If only one calibration staircase converged, use t-test to check
+    t_acc, p_acc = ttest_ind(high["detection_accuracy"].dropna(), low["detection_accuracy"].dropna())
+    t_ag, p_ag = ttest_ind(high["agency_rating"].dropna(), low["agency_rating"].dropna())
+
+    acc_ok = acc_diff > 0 and p_acc < 0.05
+    ag_ok = ag_diff > 0 and p_ag < 0.05
+
+    # If either t-test is not significant or the difference is in the wrong direction, exclude
+    if not acc_ok or not ag_ok:
+        excluded_manip.append(px)
+
+print(f"Criterion 5 (Manipulation Fail): Excluded {len(excluded_manip)} participants {excluded_manip}")
+data = data[~data["participant"].isin(excluded_manip)].copy()
 
 
 # =============================================================================
