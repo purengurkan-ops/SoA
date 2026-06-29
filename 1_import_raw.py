@@ -10,7 +10,7 @@ from mne.preprocessing import ICA
 # Use a single-element list (e.g. [31]) to test one participant,
 # or list(range(5, 38)) to run all of them.
 # ──────────────────────────────────────────────────────────────
-plist = [3]  # <-- change this as needed
+plist = [10]  # <-- change this as needed
 
 # ──────────────────────────────────────────────────────────────
 # Bad channels per participant (Step 6 from FieldTrip workflow)
@@ -18,7 +18,8 @@ plist = [3]  # <-- change this as needed
 # noisy, add it here and re-run. Empty list = no bad channels.
 # ──────────────────────────────────────────────────────────────
 bad_channels = {
-    7: ['P2']
+    7: ['P2'],
+    8: ['F3'],
     # 21: ['P8', 'TP8'],
    
 }
