@@ -53,6 +53,19 @@ if recog_list:
 else:
     raise ValueError("Warning: No recognition data files found.")
 
+# --- DEMOGRAPHICS CHECK ---
+participant_df = data.drop_duplicates(subset=['participant'])
+
+print("\n--- DEMOGRAPHICS ---")
+print("Total Participants:", len(participant_df))
+
+if 'age' in participant_df.columns and 'gender' in participant_df.columns:
+    print("Mean Age:", participant_df['age'].mean())
+    print("Age SD:", participant_df['age'].std())
+    print("Gender Distribution:\n", participant_df['gender'].value_counts())
+else:
+    print("Warning: 'age' and 'gender' columns not found in the dataset.")
+
 
 # =============================================================================
 # PHASE 2: DATA CLEANING & EXCLUSIONS
