@@ -32,7 +32,7 @@ df_list = []
 for file_path in all_files:
     df_list.append(pd.read_csv(file_path))
 
-if PARTICIPANT_FILTER: 
+if PARTICIPANT_FILTER:
     df_list = [df for df in df_list if df["participant"].iloc[0] in PARTICIPANT_FILTER]
 
 if df_list:
@@ -66,6 +66,22 @@ if 'age' in participant_df.columns and 'gender' in participant_df.columns:
 else:
     print("Warning: 'age' and 'gender' columns not found in the dataset.")
 
+main_pts = set(data["participant"].unique())
+recog_pts = set(recog_data["participant"].unique())
+missing = main_pts - recog_pts
+print("Missing from recognition:", missing) 
+
+from pathlib import Path
+DATA_DIR = Path(r"/Users/purengurkan/Desktop/SoA/SoA/CDmem/data/main_Data")
+print("Recognition files the glob found:")
+for f in sorted(DATA_DIR.glob("CDmem_*_recognition.csv")):
+    print("  ", f.name)
+
+print("\nEverything in the folder with 'recog' in the name:")
+for f in sorted(DATA_DIR.iterdir()):
+    if "recog" in f.name.lower():
+        print("  ", f.name)
+
 
 # =============================================================================
 # PHASE 2: DATA CLEANING & EXCLUSIONS
@@ -97,7 +113,7 @@ print(f"Criterion 2 (Det Acc > 2.5 SD per condition): Excluded {len(excluded_acc
 calib_data = data[data["phase"] == "calibration"].copy()
 calib_data['quest_alpha_sd'] = pd.to_numeric(calib_data['quest_alpha_sd'], errors='coerce')
 excluded_calib_pts = []
-px_convergence = {} # To track how many staircases converged per participant to inform future analyses (Excl 5)
+px_convergence = {}  # To track how many staircases converged per participant to inform future analyses (Excl 5)
 
 for px, px_df in calib_data.groupby("participant"):
     n_converged = 0
@@ -106,9 +122,9 @@ for px, px_df in calib_data.groupby("participant"):
             final_sd = target_df["quest_alpha_sd"].iloc[-1]
             if not pd.isna(final_sd) and final_sd < 0.20:
                 n_converged += 1
-    
+
     px_convergence[px] = n_converged
-    if n_converged == 0: # If both staircases failed to converge, exclude the participant
+    if n_converged == 0:  # If both staircases failed to converge, exclude the participant
         excluded_calib_pts.append(px)
 
 print(f"Criterion 3 (Calibration Fail): Excluded {len(excluded_calib_pts)} participants {excluded_calib_pts}")
@@ -168,6 +184,19 @@ for px in sorted(data["participant"].unique()):
 print(f"Criterion 5 (Manipulation Fail): Excluded {len(excluded_manip)} participants {excluded_manip}")
 data = data[~data["participant"].isin(excluded_manip)].copy()
 
+# --- FIX: keep recognition/memory data in sync with the final analyzed sample ---
+# `clean_recog_data` was built from `recog_data`, which was never subjected to the
+# participant-level exclusions above (timeout, accuracy outliers, calibration
+# failure, manipulation failure). Without this step, excluded participants'
+# recognition trials still flow into `model_data` in Phase 4, and because their
+# images have no match in the (already-filtered) `data` lookup table, those trials
+# get assigned control_condition = NaN, which downstream gets silently contrast-
+# coded as low control (-0.5). This line removes that leak.
+final_pts = data["participant"].unique()
+clean_recog_data = clean_recog_data[clean_recog_data["participant"].isin(final_pts)].copy()
+print(f"Recognition data restricted to final sample: {clean_recog_data['participant'].nunique()} participants, "
+      f"{len(clean_recog_data)} trials remain.")
+
 
 # =============================================================================
 # PHASE 3: MANIPULATION CHECKS
@@ -176,14 +205,14 @@ print("\n" + "="*40)
 print("PHASE 3: SANITY / MANIPULATION CHECKS")
 print("="*40)
 
-mani_data = data[data['control_condition'].isin(['high', 'low'])].copy()
+mani_data = data[(data["phase"] == "test") & (data['control_condition'].isin(['high', 'low']))].copy()
 pt_means = mani_data.groupby(['participant', 'control_condition'])[['detection_accuracy', 'agency_rating']].mean().reset_index()
 manipulation_summary = pt_means.groupby('control_condition')[['detection_accuracy', 'agency_rating']].mean().reset_index()
 manipulation_summary['detection_accuracy'] = manipulation_summary['detection_accuracy'] * 100
 
 print("\nMANIPULATION CHECK SUMMARY")
 print("-" * 40)
-print(manipulation_summary.round(2).to_string(index=False)) 
+print(manipulation_summary.round(2).to_string(index=False))
 
 wide_pt_means = pt_means.pivot(index='participant', columns='control_condition', values=['agency_rating', 'detection_accuracy']).dropna()
 
@@ -217,6 +246,17 @@ if 'control_condition' in targets.columns:
 
 targets = targets.merge(img_lookup, on=['participant', 'mem_filename'], how='left')
 
+# Sanity check: since clean_recog_data is now restricted to the final sample and
+# every seen image should have a matching row in `data`, there should be no
+# unmatched merges left. Flag it loudly if there are, rather than letting NaNs
+# silently propagate into the models.
+n_unmatched = targets['control_condition'].isna().sum()
+if n_unmatched > 0:
+    print(f"WARNING: {n_unmatched} seen-item recognition trials failed to match a "
+          f"control_condition after merging. Check img_A_name/img_B_name/mem_filename consistency.")
+else:
+    print("Merge check passed: all seen-item trials matched a control_condition.")
+
 # --- 2. Assign Foils (Dummy Conditions) ---
 foils = clean_recog_data[clean_recog_data['mem_ground_truth'] == 'unseen'].copy()
 foils = foils.sort_values(by=['participant', 'mem_filename'])
@@ -230,7 +270,7 @@ foils['controlled'] = np.where(row_numbers % 2 == 0, 'yes', 'no')
 model_data = pd.concat([targets, foils], ignore_index=True)
 
 model_data['said_old_int'] = model_data['mem_response'].map({'yes': 1, 'no': 0})
-model_data['log_mem_rt'] = np.log(model_data['mem_rt']) 
+model_data['log_mem_rt'] = np.log(model_data['mem_rt'])
 
 # Predictor 1: Control Condition (+0.5 High, -0.5 Low)
 model_data['control_c'] = np.where(model_data['control_condition'] == 'high', 0.5, -0.5)
@@ -239,7 +279,7 @@ model_data['control_c'] = np.where(model_data['control_condition'] == 'high', 0.
 model_data['item_type_c'] = np.where(model_data['mem_ground_truth'] == 'seen', 0.5, -0.5)
 
 # Predictor 3: Detection Accuracy
-model_data['detection_accuracy_c'] = np.where(model_data['detection_accuracy'] == 1, 0.5, 
+model_data['detection_accuracy_c'] = np.where(model_data['detection_accuracy'] == 1, 0.5,
                                      np.where(model_data['detection_accuracy'] == 0, -0.5, 0))
 
 # --- 4. Compute d-prime (Now calculating based on High vs Low Control) ---
@@ -295,7 +335,7 @@ rq1_bin = glmer("said_old_int ~ item_type_c * control_c + (1 | participant)", da
 rq1_bin.fit()
 print(rq1_bin.result_fit)
 print("\n--- Random Effects (Participant Variability) ---")
-print(rq1_bin.ranef_var) 
+print(rq1_bin.ranef_var)
 
 print("\n--- RQ1 Analysis B: Gaussian LMM (log_RT ~ item_type * control) ---")
 rq1_rt = lmer("log_mem_rt ~ item_type_c * control_c + (1 | participant)", data=model_data_pl)
@@ -304,20 +344,26 @@ print(rq1_rt.result_fit)
 
 rq2_data_pl = pl.DataFrame(model_data)
 
-print("\n--- RQ2 Analysis C: Binomial GLMM (3-Way Interaction) ---")
-rq2_formula_bin = "said_old_int ~ detection_accuracy_c * control_c * item_type_c + (1 | participant)"
-rq2_bin = glmer(rq2_formula_bin, data=rq2_data_pl, family="binomial")
+print("\n--- RQ2 Analysis C: Binomial GLMM (Controlled Items Only) ---")
+
+# CRITICAL FIX: Filter to ONLY the items the participant actually controlled
+controlled_data = model_data[model_data['controlled'] == 'yes'].copy()
+controlled_data_pl = pl.DataFrame(controlled_data)
+
+# The model is now a 2-way interaction (Detection x Control)
+rq2_formula_bin = "said_old_int ~ detection_accuracy_c * control_c + (1 | participant)"
+rq2_bin = glmer(rq2_formula_bin, data=controlled_data_pl, family="binomial")
 rq2_bin.fit()
 print(rq2_bin.result_fit)
 
-print("\n--- RQ2 Analysis D: Gaussian LMM (3-Way Interaction) ---")
-rq2_formula_rt = "log_mem_rt ~ detection_accuracy_c * control_c * item_type_c + (1 | participant)"
-rq2_rt = lmer(rq2_formula_rt, data=rq2_data_pl)
+print("\n--- RQ2 Analysis D: Gaussian LMM RT (Controlled Items Only) ---")
+rq2_formula_rt = "log_mem_rt ~ detection_accuracy_c * control_c + (1 | participant)"
+rq2_rt = lmer(rq2_formula_rt, data=controlled_data_pl)
 rq2_rt.fit()
 print(rq2_rt.result_fit)
 
 # =============================================================================
-# PHASE 6: PLOTTING (UPDATED FOR MAIN EFFECT)
+# PHASE 6: PLOTTING
 # =============================================================================
 print("\n" + "="*40)
 print("PHASE 6: GENERATING PLOTS")
@@ -329,6 +375,8 @@ PLOT_DIR.mkdir(parents=True, exist_ok=True)
 
 # Condition Colors (Blue for High, Orange for Low)
 COND_COLORS = {'high': '#3a76af', 'low': '#e38041'}
+# Detection Colors (Green for Detected, Red for Undetected)
+DET_COLORS = {'detected': '#4c9f70', 'undetected': '#b0413e'}
 
 unique_pts = pt_means['participant'].unique()
 pt_palette = sns.color_palette("tab10", n_colors=len(unique_pts))
@@ -337,8 +385,54 @@ PT_COLORS = {pt: color for pt, color in zip(unique_pts, pt_palette)}
 # Sort condition alphabetically so 'high' always comes before 'low' in plots
 results_df['control_condition'] = pd.Categorical(results_df['control_condition'], categories=['high', 'low'], ordered=True)
 
-# --- H3: Sanity Check Plots ---
+
+def three_panel_plot(df, x, y, ylabel, suptitle, fname, order, xticklabels, palette):
+    """
+    Reusable 3-panel figure: pooled bar (mean +/- SE), box+strip (distribution),
+    and per-participant lines. `df` must be at the trial level; participant
+    means are computed internally.
+    """
+    pt = df.groupby(['participant', x], observed=True)[y].mean().reset_index()
+    upts = pt['participant'].unique()
+    pt_pal = {p: c for p, c in zip(upts, sns.color_palette("tab10", n_colors=len(upts)))}
+
+    fig, axes = plt.subplots(1, 3, figsize=(15, 5))
+    fig.suptitle(suptitle, fontsize=16)
+
+    sns.barplot(data=pt, x=x, y=y, order=order, capsize=.1, errorbar='se',
+                hue=x, palette=palette, legend=False, ax=axes[0])
+    axes[0].set_title('Pooled Mean')
+    axes[0].set_ylabel(ylabel)
+    axes[0].set_xticks(range(len(order)))
+    axes[0].set_xticklabels(xticklabels)
+
+    sns.boxplot(data=pt, x=x, y=y, order=order, width=.4, hue=x,
+                palette=palette, fliersize=0, legend=False, ax=axes[1])
+    sns.stripplot(data=pt, x=x, y=y, order=order, color='black',
+                  alpha=.6, jitter=True, ax=axes[1])
+    axes[1].set_title('Box & Strip')
+    axes[1].set_ylabel(ylabel)
+    axes[1].set_xticks(range(len(order)))
+    axes[1].set_xticklabels(xticklabels)
+
+    sns.lineplot(data=pt, x=x, y=y, hue='participant', palette=pt_pal,
+                 marker='o', linewidth=2, ax=axes[2])
+    axes[2].set_title('Per Participant')
+    axes[2].set_xticks(range(len(order)))
+    axes[2].set_xticklabels(xticklabels)
+    axes[2].legend(title='Participant', bbox_to_anchor=(1.05, 1), loc='upper left')
+
+    plt.tight_layout()
+    plt.savefig(PLOT_DIR / fname, dpi=300, bbox_inches='tight')
+    plt.close()
+    print(f"Saved {fname}")
+
+
+# -----------------------------------------------------------------------------
+# H0: SANITY / MANIPULATION CHECK PLOTS (Agency Rating & Detection Accuracy)
+# -----------------------------------------------------------------------------
 mani_data['detection_accuracy_pct'] = mani_data['detection_accuracy'] * 100
+pt_means['detection_accuracy_pct'] = pt_means['detection_accuracy'] * 100
 
 fig, axes = plt.subplots(2, 2, figsize=(12, 10))
 fig.suptitle('Sanity Checks: Agency Rating & Detection Accuracy', fontsize=16)
@@ -355,74 +449,114 @@ sns.barplot(data=mani_data, x='control_condition', y='detection_accuracy_pct', o
 axes[1, 0].set_title('Pooled Detection Accuracy (%)')
 axes[1, 0].set_ylabel('Accuracy (%)')
 
-pt_means['detection_accuracy_pct'] = pt_means['detection_accuracy'] * 100
 sns.lineplot(data=pt_means, x='control_condition', y='detection_accuracy_pct', hue='participant', palette=PT_COLORS, marker='o', linewidth=2, ax=axes[1, 1])
 axes[1, 1].set_title('Per Participant Accuracy (%)')
-axes[1, 1].legend_.remove() 
+axes[1, 1].legend_.remove()
 
 plt.tight_layout()
-plt.savefig(PLOT_DIR / "H3_Sanity_Checks.png", dpi=300, bbox_inches='tight')
+plt.savefig(PLOT_DIR / "H0_Sanity_Checks.png", dpi=300, bbox_inches='tight')
 plt.close()
-print("Saved H3 Sanity Check Plots.")
+print("Saved H0_Sanity_Checks.png")
 
-# --- H1: d' Plots ---
+
+# -----------------------------------------------------------------------------
+# H1: MAIN EFFECT OF CONTROL — MEMORY ACCURACY (d' and Hit Rate)
+# -----------------------------------------------------------------------------
 fig, axes = plt.subplots(1, 3, figsize=(15, 5))
-fig.suptitle("Memory Performance (d')", fontsize=16)
+fig.suptitle("Main Effect of Control — Memory Performance (d')", fontsize=16)
 
-# Swapped x to control_condition, updated palette
 sns.barplot(data=results_df, x='control_condition', y='d_prime', order=['high', 'low'], capsize=.1, errorbar='se', palette=COND_COLORS, hue='control_condition', ax=axes[0])
-axes[0].set_title('Pooled Mean d-prime')
-axes[0].set_ylabel("d'")
-axes[0].set_xticks([0, 1])
-axes[0].set_xticklabels(['High Control', 'Low Control'])
+axes[0].set_title('Pooled Mean d-prime'); axes[0].set_ylabel("d'")
+axes[0].set_xticks([0, 1]); axes[0].set_xticklabels(['High Control', 'Low Control'])
 
-# Box + Strip Plot (Honest Distribution)
 sns.boxplot(data=results_df, x='control_condition', y='d_prime', order=['high', 'low'], width=0.4, palette=COND_COLORS, hue='control_condition', fliersize=0, ax=axes[1])
 sns.stripplot(data=results_df, x='control_condition', y='d_prime', order=['high', 'low'], color='black', alpha=0.6, jitter=True, ax=axes[1])
-axes[1].set_title("Box & Swarm of d'")
-axes[1].set_ylabel("d'")
-axes[1].set_xticks([0, 1])
-axes[1].set_xticklabels(['High Control', 'Low Control'])
+axes[1].set_title("Box & Swarm of d'"); axes[1].set_ylabel("d'")
+axes[1].set_xticks([0, 1]); axes[1].set_xticklabels(['High Control', 'Low Control'])
 
 sns.lineplot(data=results_df, x='control_condition', y='d_prime', hue='participant', palette=PT_COLORS, marker='o', linewidth=2, ax=axes[2])
 axes[2].set_title("Per Participant d'")
-axes[2].set_xticks([0, 1])
-axes[2].set_xticklabels(['High Control', 'Low Control'])
+axes[2].set_xticks([0, 1]); axes[2].set_xticklabels(['High Control', 'Low Control'])
 axes[2].legend(title='Participant', bbox_to_anchor=(1.05, 1), loc='upper left')
 
 plt.tight_layout()
-plt.savefig(PLOT_DIR / "H1_Dprime.png", dpi=300, bbox_inches='tight')
+plt.savefig(PLOT_DIR / "H1_Control_Dprime.png", dpi=300, bbox_inches='tight')
 plt.close()
-print("Saved H1 d' Plots.")
+print("Saved H1_Control_Dprime.png")
 
-# --- H2: Hit Rate Plots ---
 results_df['hit_rate'] = results_df['hits'] / (results_df['hits'] + results_df['misses'])
 
 fig, axes = plt.subplots(1, 3, figsize=(15, 5))
-fig.suptitle("Memory Performance (Hit Rate)", fontsize=16)
+fig.suptitle("Main Effect of Control — Memory Performance (Hit Rate)", fontsize=16)
 
-# Swapped x to control_condition, updated palette
 sns.barplot(data=results_df, x='control_condition', y='hit_rate', order=['high', 'low'], capsize=.1, errorbar='se', palette=COND_COLORS, hue='control_condition', ax=axes[0])
-axes[0].set_title('Pooled Mean Hit Rate')
-axes[0].set_ylabel("Hit Rate")
-axes[0].set_xticks([0, 1])
-axes[0].set_xticklabels(['High Control', 'Low Control'])
+axes[0].set_title('Pooled Mean Hit Rate'); axes[0].set_ylabel("Hit Rate")
+axes[0].set_xticks([0, 1]); axes[0].set_xticklabels(['High Control', 'Low Control'])
 
-# Box + Strip Plot 
 sns.boxplot(data=results_df, x='control_condition', y='hit_rate', order=['high', 'low'], width=0.4, palette=COND_COLORS, hue='control_condition', fliersize=0, ax=axes[1])
 sns.stripplot(data=results_df, x='control_condition', y='hit_rate', order=['high', 'low'], color='black', alpha=0.6, jitter=True, ax=axes[1])
-axes[1].set_title("Box & Swarm of Hit Rate")
-axes[1].set_ylabel("Hit Rate")
-axes[1].set_xticks([0, 1])
-axes[1].set_xticklabels(['High Control', 'Low Control'])
+axes[1].set_title("Box & Swarm of Hit Rate"); axes[1].set_ylabel("Hit Rate")
+axes[1].set_xticks([0, 1]); axes[1].set_xticklabels(['High Control', 'Low Control'])
 
 sns.lineplot(data=results_df, x='control_condition', y='hit_rate', hue='participant', palette=PT_COLORS, marker='o', linewidth=2, ax=axes[2])
 axes[2].set_title("Per Participant Hit Rate")
-axes[2].set_xticks([0, 1])
-axes[2].set_xticklabels(['High Control', 'Low Control'])
+axes[2].set_xticks([0, 1]); axes[2].set_xticklabels(['High Control', 'Low Control'])
 axes[2].legend(title='Participant', bbox_to_anchor=(1.05, 1), loc='upper left')
 
 plt.tight_layout()
-plt.savefig(PLOT_DIR / "H2_HitRate.png", dpi=300, bbox_inches='tight')
+plt.savefig(PLOT_DIR / "H1_Control_HitRate.png", dpi=300, bbox_inches='tight')
 plt.close()
-print("Saved H2 Hit Rate Plots.")
+print("Saved H1_Control_HitRate.png")
+
+
+# -----------------------------------------------------------------------------
+# H1 (continued): MAIN EFFECT OF CONTROL — RECOGNITION REACTION TIME
+# -----------------------------------------------------------------------------
+seen_items = model_data[model_data['mem_ground_truth'] == 'seen'].copy()
+seen_items['control_condition'] = pd.Categorical(seen_items['control_condition'], categories=['high', 'low'], ordered=True)
+
+three_panel_plot(
+    df=seen_items, x='control_condition', y='mem_rt', ylabel='Recognition RT (s)',
+    suptitle="Main Effect of Control — Recognition Reaction Time (Seen Items)",
+    fname="H1_Control_RT.png", order=['high', 'low'],
+    xticklabels=['High Control', 'Low Control'], palette=COND_COLORS
+)
+
+
+# -----------------------------------------------------------------------------
+# H2: EFFECT OF CONTROL DETECTION — ACCURACY (Hit Rate) AND REACTION TIME
+# -----------------------------------------------------------------------------
+seen_items['det_label'] = np.where(seen_items['detection_accuracy'] == 1, 'detected', 'undetected')
+
+three_panel_plot(
+    df=seen_items, x='det_label', y='said_old_int', ylabel='Hit Rate',
+    suptitle="Effect of Control Detection — Memory Accuracy (Seen Items)",
+    fname="H2_Detection_HitRate.png", order=['detected', 'undetected'],
+    xticklabels=['Detected', 'Undetected'], palette=DET_COLORS
+)
+
+three_panel_plot(
+    df=seen_items, x='det_label', y='mem_rt', ylabel='Recognition RT (s)',
+    suptitle="Effect of Control Detection — Reaction Time (Seen Items)",
+    fname="H2_Detection_RT.png", order=['detected', 'undetected'],
+    xticklabels=['Detected', 'Undetected'], palette=DET_COLORS
+)
+
+# --- Bonus: Detection x Control grouped view (visual companion to the RQ2 3-way model) ---
+for dv, ylab, tag in [('said_old_int', 'Hit Rate', 'HitRate'), ('mem_rt', 'Recognition RT (s)', 'RT')]:
+    cell_means = (seen_items.groupby(['participant', 'control_condition', 'det_label'], observed=True)[dv]
+                  .mean().reset_index())
+    plt.figure(figsize=(7, 5))
+    sns.barplot(data=cell_means, x='control_condition', y=dv, hue='det_label',
+                order=['high', 'low'], hue_order=['detected', 'undetected'],
+                capsize=.08, errorbar='se', palette=DET_COLORS)
+    plt.title(f"Detection x Control Interaction — {ylab} (Seen Items)")
+    plt.xlabel("Control Condition"); plt.ylabel(ylab)
+    plt.xticks([0, 1], ['High', 'Low'])
+    plt.legend(title='Detection')
+    plt.tight_layout()
+    plt.savefig(PLOT_DIR / f"H2_DetectionByControl_{tag}.png", dpi=300, bbox_inches='tight')
+    plt.close()
+    print(f"Saved H2_DetectionByControl_{tag}.png")
+
+print("\nAll plots saved to:", PLOT_DIR)
