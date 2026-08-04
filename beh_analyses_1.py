@@ -214,7 +214,20 @@ print("\nMANIPULATION CHECK SUMMARY")
 print("-" * 40)
 print(manipulation_summary.round(2).to_string(index=False))
 
+# Pivot to wide format for paired t-tests
 wide_pt_means = pt_means.pivot(index='participant', columns='control_condition', values=['agency_rating', 'detection_accuracy']).dropna()
+
+# Means and SDs per condition (participant-level)
+desc = wide_pt_means.agg(['mean', 'std'])
+desc[('detection_accuracy', 'high')] *= 100
+desc[('detection_accuracy', 'low')]  *= 100
+print("\n--- MEANS AND SDs BY CONDITION ---")
+print(desc.round(2).to_string())
+
+# SD of the paired difference (useful for the effect-size sentence)
+for var in ['detection_accuracy', 'agency_rating']:
+    diff = wide_pt_means[(var, 'high')] - wide_pt_means[(var, 'low')]
+    print(f"{var}: M_diff = {diff.mean():.3f}, SD_diff = {diff.std(ddof=1):.3f}")
 
 print("\n--- AGENCY RATING T-TEST (High vs. Low) ---")
 agency_ttest = pg.ttest(wide_pt_means[('agency_rating', 'high')], wide_pt_means[('agency_rating', 'low')], paired=True)
@@ -314,7 +327,7 @@ if not results_df.empty:
     results_df['hit_rate'] = results_df['hits'] / (results_df['hits'] + results_df['misses'])
     results_df.to_csv(OUTPUT_DIR / "dprime_by_condition.csv", index=False)
 else:
-    print("UYARI: results_df boş çıktı, veri eşleştirme sorunu var.")
+    print("WARNING: results_df is empty, matching problem.")
 
 
 # =============================================================================
@@ -327,7 +340,7 @@ print("="*40)
 model_data_pl = pl.DataFrame(model_data)
 
 print("\n--- RQ1 Analysis A: Binomial GLMM (said_old ~ item_type * control) ---")
-# RQ1: TÜM VERİ (Seen + Unseen) - Elif'in istediği format
+# RQ1: (Seen + Unseen)
 rq1_bin = glmer("said_old_int ~ item_type_c * control_c + (1 | participant)", data=model_data_pl, family="binomial")
 rq1_bin.fit()
 print(rq1_bin.result_fit)
